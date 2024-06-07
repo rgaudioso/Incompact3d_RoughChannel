@@ -429,7 +429,7 @@ contains
   end subroutine momentum_forcing_channel
   !############################################################################
   !############################################################################
-  subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,yp,remp)
+  subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dxx,yp,dzz,remp)
 
     use param, only : zero, one, two, ten, pi
     use ibm_param
@@ -442,6 +442,7 @@ contains
     real(mytype),dimension(ny) :: yp
     real(mytype)               :: A, om
     real(mytype)               :: remp
+    real(mytype)               :: dxx,dzz
     integer                    :: i,j,k,is,ks
     real(mytype)               :: xm,ym,zm
     !real(mytype)               :: zeromach
@@ -511,10 +512,24 @@ contains
     ! # Sinusoidal roughness
     A = ampl*(yly/2)
     om = (2*pi)/zlz
+<<<<<<< HEAD
     do ks = nzi,nzf
        zm = zp(ks)
       do is = nxi,nxf
          xm = xp(is)
+=======
+    !do ks = 1,nz
+    !   zm = zp(ks)
+    !  do is = 1,nx
+    !     xm = xp(is)
+    !     ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
+    !  enddo
+    !enddo
+    do ks = nzi,nzf !loop in global indices
+       zm = real(ks-1, mytype)*dzz
+      do is = nxi,nxf !loop in global indices
+         xm = real(is-1, mytype)*dxx
+>>>>>>> 9bb4dca97edcf24f1d193ef8657ed968e6d7ef28
          ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
       enddo
     enddo
