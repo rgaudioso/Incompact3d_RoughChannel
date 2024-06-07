@@ -512,12 +512,6 @@ contains
     ! # Sinusoidal roughness
     A = ampl*(yly/2)
     om = (2*pi)/zlz
-<<<<<<< HEAD
-    do ks = nzi,nzf
-       zm = zp(ks)
-      do is = nxi,nxf
-         xm = xp(is)
-=======
     !do ks = 1,nz
     !   zm = zp(ks)
     !  do is = 1,nx
@@ -529,7 +523,6 @@ contains
        zm = real(ks-1, mytype)*dzz
       do is = nxi,nxf !loop in global indices
          xm = real(is-1, mytype)*dxx
->>>>>>> 9bb4dca97edcf24f1d193ef8657ed968e6d7ef28
          ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
       enddo
     enddo
