@@ -511,9 +511,9 @@ contains
     ! # Sinusoidal roughness
     A = ampl*(yly/2)
     om = (2*pi)/zlz
-    do ks = 1,nz
+    do ks = nzi,nzf
        zm = zp(ks)
-      do is = 1,nx
+      do is = nxi,nxf
          xm = xp(is)
          ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
       enddo

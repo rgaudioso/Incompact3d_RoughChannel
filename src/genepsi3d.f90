@@ -803,7 +803,7 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      write(*,*) 'xsize3:', xsize(3)
      write(*,*) '++++++++++++++++++++++'
   endif 
-  if (nrank==8) then  
+  if (nrank==0) then  
      open(unit=99, file='data/geometry/epsi.dat', status='unknown')
      ! Write the epsi matrix to the file
      do k=1,xsize(3)
