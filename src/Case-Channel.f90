@@ -438,7 +438,8 @@ contains
 
     integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
     real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    real(mytype),dimension(nz,nx) :: ys
+    !real(mytype),dimension(nz,nx) :: ys
+    real(mytype),dimension(nzi:nzf,nxi:nxf) :: ys
     real(mytype),dimension(ny) :: yp
     real(mytype)               :: A, om
     real(mytype)               :: remp
