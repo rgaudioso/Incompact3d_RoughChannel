@@ -644,6 +644,8 @@ module ibm_param
   real(mytype) :: chord,thickness,omega
   integer :: inana ! Analytical BC as Input
   integer :: imove
+  integer :: isurf
+  character(len=100) :: rmap !Rough surface input file
 end module ibm_param
 !############################################################################
 !############################################################################

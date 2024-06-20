@@ -2050,5 +2050,58 @@ subroutine test_min_max(name,text,array_tmp,i_size_array_tmp)
 
   return
 end subroutine test_min_max
+!##################################################################
+!##################################################################
+subroutine read_surface(matrix, nrows, ncols)
+  
+  use param
+  use ibm_param
+  use variables
+  
+  implicit none
+  
+  integer :: nrows, ncols
+  real(mytype), dimension(nrows,ncols) :: matrix ! For DEBUG: Provide nrows,ncols in geomcomplex for a test matrix
+  !real(mytype), allocatable :: matrix(:,:) 
+  integer :: i, j, io_status
+  character(len=100) :: filename  
+  
+  ! Read the filename and dimensions from the namelist
+  filename = rmap
+  print *, 'Check 0: found correct filename: ', trim(filename)
+  print *, 'Matrix dimensions: ',nrows,'x',ncols
+  
+  ! Open the file
+  open(unit=33, file=filename, status='old', action='read', iostat=io_status)
+  if (io_status /= 0) then
+    print *, 'Error opening file ', trim(filename)
+    stop
+  end if
+  print *, 'Check 1: File opened successfully'
+  
+  ! Allocate the matrix
+  !allocate(matrix(nrows, ncols))
+  !print *, 'Check 2: Matrix allocated successfully'
 
+  ! Read the matrix data from the file
+  do i = 1, nrows
+    read(33, *, iostat=io_status) (matrix(i, j), j = 1, ncols)
+    if (io_status /= 0) then
+      print *, 'Error reading matrix data from file ', trim(filename)
+      close(33)
+      stop
+    end if
+  end do
+  close(33)
+  print *, 'Check 3: Matrix data read successfully'
 
+  ! Print the matrix to verify (for debugging purposes)
+  print *, 'Matrix read from file:'
+  do i = 1, nrows
+    print *, (matrix(i, j), j = 1, ncols)
+  end do
+  print *, 'Dimensions check: '
+  print *, size(matrix,1)
+  print *, size(matrix,2)
+  !deallocate(matrix)
+end subroutine read_surface

@@ -431,7 +431,7 @@ contains
   !############################################################################
   subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dxx,yp,dzz,remp)
 
-    use param, only : zero, one, two, ten, pi
+    use param, only : zero, one, two, three, ten, pi
     use ibm_param
 
     implicit none
@@ -446,11 +446,14 @@ contains
     real(mytype)               :: dxx,dzz
     integer                    :: i,j,k,is,ks
     real(mytype)               :: xm,ym,zm
+    real(mytype),dimension(7,7) :: matrix
+    !real(mytype), allocatable  :: matrix(:,:)
     !real(mytype)               :: zeromach
     !real(mytype)               :: h
 
     epsi(:,:,:) = zero
     ys(:,:) = zero
+    
     !h = (yly - two) / two
 
     !zeromach=one
@@ -511,33 +514,60 @@ contains
     !enddo
     ! ------------------------------------------------------------
     ! # Sinusoidal roughness
-    A = ampl*(yly/2)
-    om = (2*pi)/zlz
-    !do ks = 1,nz
-    !   zm = zp(ks)
-    !  do is = 1,nx
-    !     xm = xp(is)
-    !     ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
-    !  enddo
-    !enddo
-    do ks = nzi,nzf !loop in global indices
-       zm = real(ks-1, mytype)*dzz
-      do is = nxi,nxf !loop in global indices
-         xm = real(is-1, mytype)*dxx
-         ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
-      enddo
-    enddo
-    do k=nzi,nzf
-      do j=nyi,nyf
-         ym=yp(j)
-        do i=nxi,nxf
-           if ((ym.le.(ys(k,i))).or.(ym.ge.(yly-ys(k,i)))) then
-              epsi(i,j,k)=remp
-           endif
-        enddo
-      enddo
-    enddo         
-    ! ------------------------------------------------------------
+    if (isurf==1) then
+       A = ampl*(yly/2)
+       om = (2*pi)/zlz
+       !do ks = 1,nz
+       !   zm = zp(ks)
+       !  do is = 1,nx
+       !     xm = xp(is)
+       !     ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
+       !  enddo
+       !enddo
+       do ks = nzi,nzf !loop in global indices
+          zm = real(ks-1, mytype)*dzz
+         do is = nxi,nxf !loop in global indices
+            xm = real(is-1, mytype)*dxx
+            ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
+         enddo
+       enddo
+       do k=nzi,nzf
+         do j=nyi,nyf
+            ym=yp(j)
+           do i=nxi,nxf
+              if ((ym.le.(ys(k,i))).or.(ym.ge.(yly-ys(k,i)))) then
+                 epsi(i,j,k)=remp
+              endif
+           enddo
+         enddo
+       enddo
+    endif         
+    ! #Rough map file readin --------------------------------------
+    ! Use these dimensions when the map matches the grid resolution
+    !nrows = nz
+    !ncols = nx
+   
+    ! DEBUG
+    if (isurf==2) then
+       call read_surface(matrix,7,7)
+       !deallocate(matrix)
+       stop
+    endif
+   
+    !!!!! CHECK INDICES !!!!! This cannot work with nraf =/ 1
+    !if (isurf==2) then
+    !   call(read_surface(matrix(nz,nx)))
+    !   do k=nzi,nzf
+    !      do j=nyi,nyf
+    !         ym=yp(j)
+    !        do i=nxi,nxf
+    !           if ((ym.le.(matrix(k,i))).or.(ym.ge.(yly-matrix(k,i)))) then
+    !              epsi(i,j,k)=remp
+    !           endif
+    !        enddo
+    !      enddo
+    !   enddo
+    !endif
     return
   end subroutine geomcomplex_channel
   !############################################################################

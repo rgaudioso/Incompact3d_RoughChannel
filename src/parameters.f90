@@ -63,7 +63,7 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega, &
-       ubcx,ubcy,ubcz,rads, c_air, offset, ampl
+       ubcx,ubcy,ubcz,rads, c_air, offset, ampl, isurf, rmap
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
@@ -523,6 +523,12 @@ subroutine parameter(input_i3d)
        write(*,"(' nobjmax                : ',I17)") nobjmax
        write(*,"(' wall-offset            : ',F17.2)") offset
        write(*,"(' sinusoidal wall ampl.  : ',F17.2)") ampl
+       if (isurf==0) write(*,*) 'Smooth wall'
+       if (isurf==1) write(*,*) 'Considering sinusoidal roughness'
+       if (isurf==2) then
+          write(*,*) 'Reading realistic roughness map from file'
+          write(*, "(' Surface filename   : ',A17)") rmap
+       endif 
      end if
      write(*,*) '==========================================================='
      write(*,"(' Boundary condition velocity field: ')")
@@ -646,6 +652,7 @@ subroutine parameter_defaults()
   !! IBM stuff
   nraf = 0
   nobjmax = 0
+  isurf = 0
   offset = 0
   ampl = 0
 
