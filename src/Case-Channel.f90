@@ -441,7 +441,7 @@ contains
     !real(mytype),dimension(nz,nx) :: ys
     real(mytype),dimension(nzi:nzf,nxi:nxf) :: ys
     real(mytype),dimension(ny) :: yp
-    real(mytype)               :: A, om
+    real(mytype)               :: om, lambda
     real(mytype)               :: remp
     real(mytype)               :: dxx,dzz
     integer                    :: i,j,k,is,ks
@@ -515,8 +515,8 @@ contains
     ! ------------------------------------------------------------
     ! # Sinusoidal roughness
     if (isurf==1) then
-       A = ampl*(yly/2)
-       om = (2*pi)/zlz
+       lambda = 7.07*ampl !MacDonald
+       om = (2*pi)/lambda
        !do ks = 1,nz
        !   zm = zp(ks)
        !  do is = 1,nx
@@ -528,7 +528,7 @@ contains
           zm = real(ks-1, mytype)*dzz
          do is = nxi,nxf !loop in global indices
             xm = real(is-1, mytype)*dxx
-            ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
+            ys(ks,is) = ampl * cos(om*xm) * cos(om*zm) + ampl
          enddo
        enddo
        do k=nzi,nzf
