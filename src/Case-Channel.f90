@@ -471,23 +471,25 @@ contains
     !enddo
     ! -------------------------------------------------------------
     ! # Channel with bump 
-    !do k=nzi,nzf
-    !  do j=nyi,nyf
-    !     ym=yp(j)
-    !    do i=nxi,nxf
-    !       xm=xp(i)
-    !       if ((xm.le.(xlx/2-1)).or.(xm.ge.(xlx/2+1))) then
-    !          if ((ym.le.offset).or.(ym.ge.(yly-offset))) then
-    !             epsi(i,j,k)=remp
-    !          endif
-    !       else 
-    !          if ((ym.le.(offset*2)).or.(ym.ge.(yly-offset*2))) then
-    !             epsi(i,j,k)=remp
-    !          endif
-    !       endif
-    !    enddo
-    !  enddo
-    !enddo
+    if (isurf==0) then   
+       do k=nzi,nzf
+         do j=nyi,nyf
+            ym=yp(j)
+           do i=nxi,nxf
+              xm=xp(i)
+              if ((xm.le.(xlx/2-1)).or.(xm.ge.(xlx/2+1))) then
+                 if ((ym.le.offset).or.(ym.ge.(yly-offset))) then
+                    epsi(i,j,k)=remp
+                 endif
+              else 
+                 if ((ym.le.(offset*2)).or.(ym.ge.(yly-offset*2))) then
+                    epsi(i,j,k)=remp
+                 endif
+              endif
+           enddo
+         enddo
+       enddo
+    endif
     ! ------------------------------------------------------------
     ! # Channel with double bump
     !do k=nzi,nzf
@@ -528,7 +530,7 @@ contains
           zm = real(ks-1, mytype)*dzz
          do is = nxi,nxf !loop in global indices
             xm = real(is-1, mytype)*dxx
-            ys(ks,is) = ampl * cos(om*xm) * cos(om*zm) + ampl
+            ys(ks,is) = ampl * cos(om*xm) * cos(om*zm) + 5.*ampl !adding immersed wall points --> ADJUST yly
          enddo
        enddo
        do k=nzi,nzf
