@@ -2,7 +2,7 @@
 !This file is part of Xcompact3d (xcompact3d.com)
 !SPDX-License-Identifier: BSD 3-Clause
 
-module channel
+module rough
 
   use decomp_2d_constants
   use decomp_2d_mpi
@@ -820,4 +820,4 @@ contains
 
   end subroutine sem_init_channel
   !############################################################################
-end module channel
+end module rough
