@@ -307,7 +307,8 @@ module param
        itype_uniform = 11, &
        itype_sandbox = 12, &
        itype_cavity = 13, &
-       itype_pipe = 14
+       itype_pipe = 14, &
+       itype_rough = 15
 
   integer :: cont_phi,itr,itime,itest,iprocessing
   integer :: ifft,istret,iforc_entree,iturb
@@ -327,6 +328,8 @@ module param
   real(mytype) :: C_filter
   character(len=512) :: inflowpath
   logical :: validation_restart
+  !!DEBUG
+  integer :: new_rec !new reconstruction technqique through yz periodicity for pipe flow
 
   ! Logical, true when synchronization is needed
   logical, save :: sync_vel_needed = .true.
@@ -646,6 +649,7 @@ module ibm_param
   integer :: imove
   integer :: isurf
   character(len=100) :: rmap !Rough surface input file
+  real(mytype), dimension(:,:,:),allocatable :: rough
 end module ibm_param
 !############################################################################
 !############################################################################
