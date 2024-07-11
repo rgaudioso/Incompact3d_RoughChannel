@@ -17,13 +17,13 @@ module rough
   character(len=1),parameter :: NL=char(10) !new line character
 
   PRIVATE ! All functions/subroutines private by default
-  PUBLIC :: init_channel, boundary_conditions_channel, postprocess_channel, &
-            visu_channel, visu_channel_init, momentum_forcing_channel, &
-            geomcomplex_channel
+  PUBLIC :: init_rough, boundary_conditions_rough, postprocess_rough, &
+            visu_rough, visu_rough_init, momentum_forcing_rough, &
+            geomcomplex_rough
 
 contains
   !############################################################################
-  subroutine init_channel (ux1,uy1,uz1,ep1,phi1)
+  subroutine init_rough (ux1,uy1,uz1,ep1,phi1)
 
     use decomp_2d_io
     use variables
@@ -132,7 +132,7 @@ contains
           enddo
        enddo
     elseif (iin == 4) then ! SEM
-       call sem_init_channel(ux1, uy1, uz1)
+       call sem_init_rough(ux1, uy1, uz1)
     endif
    
     !INIT FOR G AND U=MEAN FLOW + NOISE 
@@ -161,10 +161,10 @@ contains
     endif
 
     return
-  end subroutine init_channel
+  end subroutine init_rough
   !############################################################################
   !############################################################################
-  subroutine boundary_conditions_channel (ux,uy,uz,phi)
+  subroutine boundary_conditions_rough (ux,uy,uz,phi)
 
     use param
     use var, only : di2
@@ -178,9 +178,9 @@ contains
 
     if (.not. cpg ) then ! if not constant pressure gradient
        if (idir_stream == 1) then
-          call channel_cfr(ux,two/three)
+          call rough_cfr(ux,two/three)
        else
-          call channel_cfr(uz,two/three)
+          call rough_cfr(uz,two/three)
        endif
     end if
 
@@ -223,15 +223,15 @@ contains
        endif
     endif
 
-  end subroutine boundary_conditions_channel
+  end subroutine boundary_conditions_rough
   !############################################################################
   !!
-  !!  SUBROUTINE: channel_cfr
+  !!  SUBROUTINE: rough_cfr
   !!      AUTHOR: Kay Schäfer
   !! DESCRIPTION: Inforces constant flow rate without need of data transposition
   !!
   !############################################################################
-  subroutine channel_cfr (ux, constant)
+  subroutine rough_cfr (ux, constant)
 
     use MPI
 
@@ -273,10 +273,10 @@ contains
       enddo
     enddo
 
-  end subroutine channel_cfr
+  end subroutine rough_cfr
   !############################################################################
   !############################################################################
-  subroutine postprocess_channel(ux1,uy1,uz1,pp3,phi1,ep1)
+  subroutine postprocess_rough(ux1,uy1,uz1,pp3,phi1,ep1)
 
     use var, ONLY : nzmsize
 
@@ -286,8 +286,8 @@ contains
     real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
     real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
-  end subroutine postprocess_channel
-  subroutine visu_channel_init(visu_initialised)
+  end subroutine postprocess_rough
+  subroutine visu_rough_init(visu_initialised)
 
     use decomp_2d_io, only : decomp_2d_register_variable
     use visu, only : io_name, output2D
@@ -310,15 +310,15 @@ contains
 
     visu_initialised = .true.
     
-  end subroutine visu_channel_init
+  end subroutine visu_rough_init
   !############################################################################
   !!
-  !!  SUBROUTINE: visu_channel
+  !!  SUBROUTINE: visu_rough
   !!      AUTHOR: FS
-  !! DESCRIPTION: Performs channel-specific visualization
+  !! DESCRIPTION: Performs rough-specific visualization
   !!
   !############################################################################
-  subroutine visu_channel(ux1, uy1, uz1, pp3, phi1, ep1, num)
+  subroutine visu_rough(ux1, uy1, uz1, pp3, phi1, ep1, num)
 
     use var, only : ux2, uy2, uz2, ux3, uy3, uz3
     use var, only : ta1,tb1,tc1,td1,te1,tf1,tg1,th1,ti1,di1
@@ -393,7 +393,7 @@ contains
       call write_field(Bm(:,:,:,3), ".", "B_z", num, flush = .true.)
     endif
     
-  end subroutine visu_channel
+  end subroutine visu_rough
   !############################################################################
   !############################################################################
   !!
@@ -402,7 +402,7 @@ contains
   !! DESCRIPTION: Applies rotation for t < spinup_time.
   !!
   !############################################################################
-  subroutine momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
+  subroutine momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1)
 
     implicit none
 
@@ -421,12 +421,12 @@ contains
     ! To update to take into account possible flow in z dir
     if (itime < spinup_time .and. iin <= 2) then
        if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) &
-          write(*,*) 'Rotating turbulent channel at speed ',wrotation
+          write(*,*) 'Rotating turbulent rough at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
     endif
 
-  end subroutine momentum_forcing_channel
+  end subroutine momentum_forcing_rough
   !############################################################################
   !############################################################################
   subroutine geomcomplex_rough(epsi,nxx,nxi,nxf,nyy,nyi,nyf,nzz,nzi,nzf,xxp,yyp,zzp,remp)
@@ -458,7 +458,7 @@ contains
     epsi(:,:,:) = zero
     ys(:,:) = zero
     
-    ! # Channel with constant wall offset
+    ! # rough with constant wall offset
     !do j=nyi,nyf
     !   ym=yp(j)
     !   if ((ym.le.offset).or.(ym.ge.(yly-offset))) then
@@ -466,7 +466,7 @@ contains
     !   endif
     !enddo
     ! -------------------------------------------------------------
-    ! # Channel with bump 
+    ! # rough with bump 
     if (isurf==0) then   
        do k=nzi,nzf
          do j=nyi,nyf
@@ -487,7 +487,7 @@ contains
        enddo
     endif
     ! ------------------------------------------------------------
-    ! # Channel with double bump
+    ! # rough with double bump
     !do k=nzi,nzf
     !   zm = zp(k)
     !  do j=nyi,nyf
@@ -588,7 +588,7 @@ contains
         enddo
     enddo
     return
-  end subroutine geomcomplex_channel
+  end subroutine geomcomplex_rough
   !############################################################################
   !############################################################################
   subroutine read_roughness(rough,nrows,ncols)
@@ -736,7 +736,7 @@ contains
   end function interp_hraf
   !############################################################################
   !############################################################################
-  subroutine sem_init_channel(ux1, uy1, uz1)
+  subroutine sem_init_rough(ux1, uy1, uz1)
 
     implicit none
 
@@ -818,6 +818,6 @@ contains
         enddo
      enddo
 
-  end subroutine sem_init_channel
+  end subroutine sem_init_rough
   !############################################################################
 end module rough
