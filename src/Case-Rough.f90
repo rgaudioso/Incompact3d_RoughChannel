@@ -429,38 +429,34 @@ contains
   end subroutine momentum_forcing_channel
   !############################################################################
   !############################################################################
-  subroutine geomcomplex_channel(epsi,nxi,nxf,ny,nyi,nyf,nzi,nzf,dxx,yp,dzz,remp)
+  subroutine geomcomplex_rough(epsi,nxx,nxi,nxf,nyy,nyi,nyf,nzz,nzi,nzf,xxp,yyp,zzp,remp)
 
-    use param, only : zero, one, two, three, ten, pi
+    use decomp_2d, only : mytype
+    use MPI
+    use param, only : zero, one, two, three, ten, pi, yly, zlz
+    use param, only : new_rec
     use ibm_param
 
     implicit none
 
-    integer                    :: nxi,nxf,ny,nyi,nyf,nzi,nzf
+    integer                                         :: nxx,nxi,nxf,nyy,nyi,nyf,nzz,nzi,nzf
     real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    !real(mytype),dimension(nz,nx) :: ys
-    real(mytype),dimension(nzi:nzf,nxi:nxf) :: ys
-    real(mytype),dimension(ny) :: yp
-    real(mytype)               :: om, lambda
-    real(mytype)               :: remp
-    real(mytype)               :: dxx,dzz
-    integer                    :: i,j,k,is,ks
-    real(mytype)               :: xm,ym,zm
-    real(mytype),dimension(7,7) :: matrix
-    !real(mytype), allocatable  :: matrix(:,:)
-    !real(mytype)               :: zeromach
-    !real(mytype)               :: h
+    real(mytype),dimension(nxx)                      :: xxp
+    real(mytype),dimension(nyy)                      :: yyp
+    real(mytype),dimension(nzz)                      :: zzp
+    real(mytype)                                    :: remp
+    real(mytype)                                    :: r,ym,zm,xm
+    !ANALYTICAL SIN ROUGHNESS
+    real(mytype),dimension(nzi:nzf,nxi:nxf)         :: ys
+    real(mytype)                                    :: om, lambda
+    !LOCALS
+    integer                                         :: i,j,k,irank,code,is, ,ia,ka
+    integer                                         :: iprint
+    !
+    real(mytype)                                    :: hraf
 
     epsi(:,:,:) = zero
     ys(:,:) = zero
-    
-    !h = (yly - two) / two
-
-    !zeromach=one
-    !do while ((one + zeromach / two) .gt. one)
-    !   zeromach = zeromach/two
-    !end do
-    !zeromach = ten*zeromach
     
     ! # Channel with constant wall offset
     !do j=nyi,nyf
@@ -515,20 +511,13 @@ contains
     !  enddo
     !enddo
     ! ------------------------------------------------------------
-    ! # Sinusoidal roughness
+    ! # Sinusoidal roughness, ANALYTICAL
     if (isurf==1) then
        lambda = 7.07*ampl !MacDonald
        om = (2*pi)/lambda
-       !do ks = 1,nz
-       !   zm = zp(ks)
-       !  do is = 1,nx
-       !     xm = xp(is)
-       !     ys(ks,is) = A * cos(om*xm) * cos(om*zm) + A
-       !  enddo
-       !enddo
-       do ks = nzi,nzf !loop in global indices
+       do ka = nzi,nzf !loop in global indices
           zm = real(ks-1, mytype)*dzz
-         do is = nxi,nxf !loop in global indices
+         do ia = nxi,nxf !loop in global indices
             xm = real(is-1, mytype)*dxx
             ys(ks,is) = ampl * cos(om*xm) * cos(om*zm) + 5.*ampl !adding immersed wall points --> ADJUST yly
          enddo
@@ -549,15 +538,9 @@ contains
     ! Use these dimensions when the map matches the grid resolution
     !nrows = nz
     !ncols = nx
-   
-    ! DEBUG
-    if (isurf==2) then
-       call read_roughness(matrix,7,7,2)
-       !deallocate(matrix)
-       stop
-    endif
-        !New Reconstruction (through transverse-yz directions periodicity)?---------
-    new_rec=1   ! 0: standard | 1: new reconstruction
+    
+    !New Reconstruction (through transverse-yz directions periodicity)?---------
+    new_rec=0   ! 0: standard | 1: new reconstruction ---> Check ibm.f90 lagpoly2(u) !!!
     !---------------------------------------------------------------------------
 
     !====DEBUG
@@ -604,20 +587,6 @@ contains
             enddo
         enddo
     enddo
-    !!!!! CHECK INDICES !!!!! This cannot work with nraf =/ 1
-    !if (isurf==2) then
-    !   call(read_surface(matrix(nz,nx)))
-    !   do k=nzi,nzf
-    !      do j=nyi,nyf
-    !         ym=yp(j)
-    !        do i=nxi,nxf
-    !           if ((ym.le.(matrix(k,i))).or.(ym.ge.(yly-matrix(k,i)))) then
-    !              epsi(i,j,k)=remp
-    !           endif
-    !        enddo
-    !      enddo
-    !   enddo
-    !endif
     return
   end subroutine geomcomplex_channel
   !############################################################################
