@@ -43,12 +43,12 @@ contains
   !*******************************************************************
   
     USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel, itype_pipe,&
-                      itype_user
+                      itype_rough
     USE decomp_2d, ONLY : mytype, nrank
     USE cyl, ONLY : geomcomplex_cyl
     !!$USE channel, ONLY : geomcomplex_channel
     USE pipe, ONLY : geomcomplex_pipe
-    USE user_sim, ONLY : geomcomplex_user,read_roughness
+    USE rough, ONLY : geomcomplex_rough, read_roughness
     !
     USE ibm_param, ONLY : rough
   
@@ -79,14 +79,14 @@ contains
        !CALL geomcomplex_pipe(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
        CALL geomcomplex_pipe(epsi, nx, nxi, nxf, ny, nyi, nyf, nz, nzi, nzf, xp, yp, zp, remp)
   
-    ELSEIF (itype.EQ.itype_user) THEN
+    ELSEIF (itype.EQ.itype_rough) THEN
   
        if (ialloc) then
            allocate(rough(nx,nz,2))
            CALL read_roughness(rough,nx,ny,nz)
            ialloc=.false.
        endif
-       CALL geomcomplex_user(epsi, nx, nxi, nxf, ny, nyi, nyf, nz, nzi, nzf, xp, yp, zp, remp)
+       CALL geomcomplex_rough(epsi, nx, nxi, nxf, ny, nyi, nyf, nz, nzi, nzf, xp, yp, zp, remp)
   
     ENDIF
   
