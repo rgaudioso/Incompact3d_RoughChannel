@@ -2063,10 +2063,11 @@ subroutine read_surface(matrix, nrows, ncols)
   integer :: nrows, ncols
   real(mytype), dimension(nrows,ncols) :: matrix ! For DEBUG: Provide nrows,ncols in geomcomplex for a test matrix
   !real(mytype), allocatable :: matrix(:,:) 
-  integer :: i, j, io_status
+  integer :: i, j, io_status, code
   character(len=100) :: filename  
   
   ! Read the filename and dimensions from the namelist
+  if (nrank==0) then
   filename = rmap
   print *, 'Check 0: found correct filename: ', trim(filename)
   print *, 'Matrix dimensions: ',nrows,'x',ncols
@@ -2103,5 +2104,7 @@ subroutine read_surface(matrix, nrows, ncols)
   print *, 'Dimensions check: '
   print *, size(matrix,1)
   print *, size(matrix,2)
+  endif
+  call MPI_BCAST(matrix,nrows*ncols,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
   !deallocate(matrix)
 end subroutine read_surface
