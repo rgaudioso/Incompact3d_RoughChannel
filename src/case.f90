@@ -21,6 +21,7 @@ module case
   use sandbox
   use cavity
   use pipe
+  use rough
 
   use var, only : nzmsize
 
@@ -110,6 +111,10 @@ contains
     elseif (itype.eq.itype_pipe) then
 
        call init_pipe(ux1, uy1, uz1, ep1, phi1)
+           
+   elseif (itype.eq.itype_rough) then
+
+       call init_rough (ux1, uy1, uz1, ep1, phi1)
 
     else
   
@@ -194,7 +199,11 @@ contains
     elseif (itype.eq.itype_pipe) then
 
        call boundary_conditions_pipe (ux, uy, uz, phi)
+       
+    elseif (itype.eq.itype_rough) then
 
+       call boundary_conditions_rough (ux, uy, uz, phi)
+       
     endif
 
   end subroutine boundary_conditions
@@ -353,6 +362,10 @@ contains
 
        call postprocess_pipe(ux, uy, uz, pp, phi, ep)
 
+    elseif (itype.eq.itype_rough) then
+
+       call postprocess_rough (ux, uy, uz, pp, phi, ep)
+
     endif
 
     if (iforces.eq.1) then
@@ -398,8 +411,11 @@ contains
 
     else if (itype .eq. itype_uniform) then
 
-       call visu_uniform_init(case_visu_init)      
+       call visu_uniform_init(case_visu_init) 
+       
+    else if (itype .eq. itype_rough) then
 
+       call visu_rough_init(case_visu_init)
     end if
     
   end subroutine visu_case_init
@@ -458,7 +474,12 @@ contains
 
        call visu_uniform(ux1, uy1, uz1, pp3, phi1, ep1, num)
        called_visu = .true.
+   
+    elseif (itype.eq.itype_rough) then
 
+       call visu_rough(ux1, uy1, uz1, pp3, phi1, ep1, num)
+       called_visu = .true.
+       
     endif
 
     if (called_visu .and. (.not. case_visu_init)) then
@@ -493,7 +514,11 @@ contains
     if (itype.eq.itype_channel) then
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
+   
+    elseif (itype.eq.itype_rough) then
 
+       call momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1)
+   
     elseif (itype.eq.itype_abl) then
 
        call momentum_forcing_abl(dux1, duy1, duz1, ux1, uy1, uz1, phi1)
