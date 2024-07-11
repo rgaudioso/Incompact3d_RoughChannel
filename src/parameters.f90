@@ -378,13 +378,15 @@ subroutine parameter(input_i3d)
      elseif (itype.eq.itype_sandbox) then
         print *,'Sandbox'
      elseif (itype.eq.itype_cavity) then
-        print *,'Cavity'  
+        print *,'Cavity' 
+     elseif (itype.eq.itype_rough) then
+        print *,'Simulating rough channel'
      else
         print *,'Unknown itype: ', itype
         stop
      endif
      print *,'==========================================================='
-     if (itype.eq.itype_channel) then
+     if (itype.eq.itype_channel.or.itype.eq.itype_rough) then
        if (.not.cpg) then
          write(*,*) 'Channel forcing with constant flow rate (CFR)'
          write(*,"(' Re_cl                  : ',F17.3)") re
