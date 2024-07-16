@@ -63,7 +63,7 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega, &
-       ubcx,ubcy,ubcz,rads, c_air, offset, ampl, isurf, rmap
+       ubcx,ubcy,ubcz,rads, c_air, offset, ampl, isurf, surfacefile
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
@@ -529,7 +529,7 @@ subroutine parameter(input_i3d)
        if (isurf==1) write(*,*) 'Considering sinusoidal roughness'
        if (isurf==2) then
           write(*,*) 'Reading realistic roughness map from file'
-          write(*, "(' Surface filename   : ',A17)") rmap
+          write(*, "(' Surface filename   : ',A17)") surfacefile
        endif 
      end if
      write(*,*) '==========================================================='

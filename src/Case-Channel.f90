@@ -544,32 +544,7 @@ contains
          enddo
        enddo
     endif         
-    ! #Rough map file readin --------------------------------------
-    ! Use these dimensions when the map matches the grid resolution
-    !nrows = nz
-    !ncols = nx
-   
-    ! DEBUG
-    if (isurf==2) then
-       call read_surface(matrix,7,7)
-       !deallocate(matrix)
-       stop
-    endif
-   
-    !!!!! CHECK INDICES !!!!! This cannot work with nraf =/ 1
-    !if (isurf==2) then
-    !   call(read_surface(matrix(nz,nx)))
-    !   do k=nzi,nzf
-    !      do j=nyi,nyf
-    !         ym=yp(j)
-    !        do i=nxi,nxf
-    !           if ((ym.le.(matrix(k,i))).or.(ym.ge.(yly-matrix(k,i)))) then
-    !              epsi(i,j,k)=remp
-    !           endif
-    !        enddo
-    !      enddo
-    !   enddo
-    !endif
+    
     return
   end subroutine geomcomplex_channel
   !############################################################################

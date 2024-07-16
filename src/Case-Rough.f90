@@ -19,7 +19,7 @@ module rough
   PRIVATE ! All functions/subroutines private by default
   PUBLIC :: init_rough, boundary_conditions_rough, postprocess_rough, &
             visu_rough, visu_rough_init, momentum_forcing_rough, &
-            geomcomplex_rough
+            geomcomplex_rough, read_roughness
 
 contains
   !############################################################################
@@ -431,8 +431,6 @@ contains
   !############################################################################
   subroutine geomcomplex_rough(epsi,nxx,nxi,nxf,nyy,nyi,nyf,nzz,nzi,nzf,xxp,yyp,zzp,remp)
 
-    use decomp_2d, only : mytype
-    use MPI
     use param, only : zero, one, two, three, ten, pi, yly, zlz
     use param, only : new_rec
     use ibm_param
@@ -441,98 +439,18 @@ contains
 
     integer                                         :: nxx,nxi,nxf,nyy,nyi,nyf,nzz,nzi,nzf
     real(mytype),dimension(nxi:nxf,nyi:nyf,nzi:nzf) :: epsi
-    real(mytype),dimension(nxx)                      :: xxp
-    real(mytype),dimension(nyy)                      :: yyp
-    real(mytype),dimension(nzz)                      :: zzp
+    real(mytype),dimension(nxx)                     :: xxp
+    real(mytype),dimension(nyy)                     :: yyp
+    real(mytype),dimension(nzz)                     :: zzp
     real(mytype)                                    :: remp
     real(mytype)                                    :: r,ym,zm,xm
-    !ANALYTICAL SIN ROUGHNESS
-    real(mytype),dimension(nzi:nzf,nxi:nxf)         :: ys
-    real(mytype)                                    :: om, lambda
     !LOCALS
-    integer                                         :: i,j,k,irank,code,is, ,ia,ka
+    integer                                         :: i,j,k,irank,code,is
     integer                                         :: iprint
     !
     real(mytype)                                    :: hraf
 
     epsi(:,:,:) = zero
-    ys(:,:) = zero
-    
-    ! # rough with constant wall offset
-    !do j=nyi,nyf
-    !   ym=yp(j)
-    !   if ((ym.le.offset).or.(ym.ge.(yly-offset))) then
-    !      epsi(:,j,:)=remp
-    !   endif
-    !enddo
-    ! -------------------------------------------------------------
-    ! # rough with bump 
-    if (isurf==0) then   
-       do k=nzi,nzf
-         do j=nyi,nyf
-            ym=yp(j)
-           do i=nxi,nxf
-              xm=xp(i)
-              if ((xm.le.(xlx/2-1)).or.(xm.ge.(xlx/2+1))) then
-                 if ((ym.le.offset).or.(ym.ge.(yly-offset))) then
-                    epsi(i,j,k)=remp
-                 endif
-              else 
-                 if ((ym.le.(offset*2)).or.(ym.ge.(yly-offset*2))) then
-                    epsi(i,j,k)=remp
-                 endif
-              endif
-           enddo
-         enddo
-       enddo
-    endif
-    ! ------------------------------------------------------------
-    ! # rough with double bump
-    !do k=nzi,nzf
-    !   zm = zp(k)
-    !  do j=nyi,nyf
-    !     ym=yp(j)
-    !    do i=nxi,nxf
-    !       xm=xp(i)
-    !       if ((xm.ge.(xlx/2-3)).and.(xm.le.(xlx/2-1)).and.(zm.ge.zlz/2-1).and.(zm.le.zlz/2+1)) then
-    !          if ((ym.le.offset*2).or.(ym.ge.(yly-offset*2))) then
-    !             epsi(i,j,k)=remp
-    !         endif
-    !       elseif ((xm.ge.(xlx/2+1)).and.(xm.le.(xlx/2+2)).and.(zm.ge.zlz/2-1).and.(zm.le.zlz/2+1)) then 
-    !          if ((ym.le.(offset*4)).or.(ym.ge.(yly-offset*4))) then
-    !             epsi(i,j,k)=remp
-    !          endif
-    !       else
-    !         if ((ym.le.(offset)).or.(ym.ge.(yly-offset))) then
-    !             epsi(i,j,k)=remp
-    !          endif
-    !       endif
-    !   enddo
-    !  enddo
-    !enddo
-    ! ------------------------------------------------------------
-    ! # Sinusoidal roughness, ANALYTICAL
-    if (isurf==1) then
-       lambda = 7.07*ampl !MacDonald
-       om = (2*pi)/lambda
-       do ka = nzi,nzf !loop in global indices
-          zm = real(ks-1, mytype)*dzz
-         do ia = nxi,nxf !loop in global indices
-            xm = real(is-1, mytype)*dxx
-            ys(ks,is) = ampl * cos(om*xm) * cos(om*zm) + 5.*ampl !adding immersed wall points --> ADJUST yly
-         enddo
-       enddo
-       do k=nzi,nzf
-         do j=nyi,nyf
-            ym=yp(j)
-           do i=nxi,nxf
-              if ((ym.le.(ys(k,i))).or.(ym.ge.(yly-ys(k,i)))) then
-                 epsi(i,j,k)=remp
-              endif
-           enddo
-         enddo
-       enddo
-    endif   
     
     ! #Rough map file readin --------------------------------------
     ! Use these dimensions when the map matches the grid resolution
@@ -559,9 +477,9 @@ contains
             do i=nxi,nxf
                 xm=xxp(i)
 
-                !!$if (nrank==0..and.iprint==1) print*,'HERE1',i,j,k
+                if (nrank==0..and.iprint==1) print*,'HERE1',i,j,k
                 hraf = interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
-                !!$if (nrank==0..and.iprint==1) print*,'HERE2',i,j,k
+                if (nrank==0..and.iprint==1) print*,'HERE2',i,j,k
 
                 if (ym.lt.yly/two.and.ym.lt.hraf) then
                     epsi(i,j,k) = remp
@@ -591,64 +509,116 @@ contains
   end subroutine geomcomplex_rough
   !############################################################################
   !############################################################################
-  subroutine read_roughness(rough,nrows,ncols)
-
-    use decomp_2d, only : mytype
-    USE MPI
-    USE ibm_param, only : ra,ncy,ncz,ylw
+  subroutine read_roughness(rmat,ncols,nrows)
+ 
+    use param
+    use ibm_param
+    use variables
 
     implicit none
 
-    !INPUT
     integer                         :: nrows,ncols
-    real(mytype),dimension(nx,nz,2) :: rough !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices
-    !LOCALS
-    integer :: i,j,k,code
-
+    real(mytype),dimension(nz,nx,2) :: rmat !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices
+    character(len=100)              :: filename 
+    integer :: i,j,code, io_status
+    
+    rmat = zero
+    filename = surfacefile
+    
     if (nrank.eq.0) then
-        open(47,file='roughness.dat',form='formatted',action='read')
-        do k=1,nrows
-            do i=1,ncols
-                read(47,*) rough(i,k,1), rough(i,k,2)
-            enddo
-        enddo
-        close(47)
+ !      print *, 'Check 0: found correct filename: ', trim(filename)
+ !       print *, 'Matrix dimensions: ',nz,'x',nx
+ !       ! Open file
+ !       open(47,file=filename,status='old',action='read',iostat=io_status)
+ !       if (io_status /= 0) then
+ !          print *, 'Error opening file ', trim(filename)
+ !          stop
+ !       endif
+ !       print *, 'Check 1: File opened successfully'
+ !         ! Read the matrix data from the file
+ !        do k = 1, nz
+ !           read(47, *, iostat=io_status) (rmat(k,i,1), i = 1, nx)
+ !           read(47, *, iostat=io_status) (rmat(k,i,2), i = 1, nx) 
+ !           if (io_status /= 0) then
+ !               print *, 'Error reading matrix data from file ', trim(filename)
+ !               stop
+ !           endif
+ !        enddo
+         
+ !        close(47)   
+ !        print *, 'Check 3: Matrix data read successfully'
+     
+ !        !!$===DEBUG Print the matrix to verify 
+ !        print *, 'Matrix read from file:'
+ !        do k = 1, nz
+ !           print *, (rmat(k,i,1), i = 1, nx)
+ !        end do
+ 
+       ! Read the filename and dimensions from the namelist
+       print *, 'Check 0: found correct filename: ', trim(filename)
+       print *, 'Matrix dimensions: ',nrows,'x',ncols
+   
+       ! Open the file
+       open(unit=33, file=filename, status='old', action='read', iostat=io_status)
+       if (io_status /= 0) then
+          print *, 'Error opening file ', trim(filename)
+       stop
+       endif
+       print *, 'Check 1: File opened successfully'
+  
+      ! Read the matrix data from the file
+      do i = 1, nrows
+        read(33, *, iostat=io_status) (rmat(i, j, 1), j = 1, ncols)
+        !read(33, *, iostat=io_status) (rmat(i, j, 2), j = 1, ncols)        
+        if (io_status /= 0) then
+           print *, 'Error reading matrix data from file ', trim(filename)
+           close(33)
+           stop
+        endif
+      enddo
+      close(33)
+      print *, 'Check 3: Matrix data read successfully'
+      
+      rmat(:,:,2) = rmat(:,:,1)
+            
+      ! Print the matrix to verify (for debugging purposes)
+      print *, 'Matrix read from file:'
+      do i = 1, 3
+         print *, (rmat(i, j, 1), j = 1, 3)
+         print *, (rmat(i, j, 2), j = 1, 3)
+      end do
+      print *, 'Dimensions check: '
+      print *, size(rmat,1)
+      print *, size(rmat,2)
+      print *, size(rmat,3)    
     endif
-    call MPI_BCAST(rough,nrows*ncols*2,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
+  
+    call MPI_BCAST(rmat,nz*nx*2,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
     !!$!====DEBUG
-    !!$if (nrank.eq.2) then
-    !!$    do k=1,nz
-    !!$        do i=1,nx
-    !!$            print*, k, i, real(rough(i,k,1),4), real(rough(i,k,2),4)
-    !!$        enddo
-    !!$    enddo
-    !!$endif
-    !!$call sleep(10)
-    !!$stop
-    !!$!====DEBUG! Print the matrix to verify (for debugging purposes)
-    print *, 'Matrix read from file:'
-    do i = 1, nrows
-       print *, (matrix(i, j), j = 1, ncols)
-    end do
-    print *, 'Dimensions check: '
-    print *, size(matrix,1)
-    print *, size(matrix,2)
-    endif
+    !if (nrank.eq.2) then
+    !    do k=1,nz
+    !        do i=1,nx
+    !            print*, k, i, real(rmat(i,k,1),4), real(rmat(i,k,2),4)
+    !        enddo
+    !    enddo
+    !endif
+    !call sleep(10)
+    !stop
     return
   end subroutine read_roughness
+
   !############################################################################
   !############################################################################
   function interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
 
-    use decomp_2d, only : mytype
-    USE MPI
     use variables, only : xp,yp,zp
-    use ibm_param, only : rough
+    use ibm_param
     use param    , only : yly,two
 
     implicit none
 
     real(mytype)                :: interp_hraf
+    real(mytype),dimension(nz,nx,2) :: rmat
     integer                     :: nxx,nyy,nzz
     real(mytype),dimension(nxx) :: xxp
     real(mytype),dimension(nyy) :: yyp
@@ -687,13 +657,13 @@ contains
                 if (xxp(i).ge.xp(ii).and.xxp(i).lt.xp(ii+1)) exit !get local index from mesh grid
             enddo
             !
-            y1=rough(ii  ,k,jside)
-            y2=rough(ii+1,k,jside)
+            y1=rmat(ii  ,k,jside)
+            y2=rmat(ii+1,k,jside)
             x1=xp(ii  )
             x2=xp(ii+1)
         else !interpolation across domain periodicity
-            y1=rough(nx,k,jside)
-            y2=rough(1 ,k,jside)
+            y1=rmat(nx,k,jside)
+            y2=rmat(1 ,k,jside)
             x1=xp(nx)
             x2=xp(nx)+dx
         endif
@@ -712,14 +682,14 @@ contains
                 if (zzp(k).ge.zp(kk).and.zzp(k).lt.zp(kk+1)) exit !get local index from mesh grid
             enddo
             !
-            y1=rough(i,kk  ,jside)
-            y2=rough(i,kk+1,jside)
+            y1=rmat(i,kk  ,jside)
+            y2=rmat(i,kk+1,jside)
             !
             x1=zp(kk  )
             x2=zp(kk+1)
         else !interpolation across domain periodicity
-            y1=rough(i,nz,jside)
-            y2=rough(i,1 ,jside)
+            y1=rmat(i,nz,jside)
+            y2=rmat(i,1 ,jside)
             !
             x1=zp(nz)
             x2=zp(nz)+dz
@@ -728,7 +698,7 @@ contains
         !linear interpolation
         interp_hraf = ((y2-y1)/(x2-x1))*(zzp(k)-x1)+y1 !linear interpolation
     else
-        interp_hraf = rough(i,k,jside) !no interpolation needed
+        interp_hraf = rmat(i,k,jside) !no interpolation needed
     endif
     !
     return

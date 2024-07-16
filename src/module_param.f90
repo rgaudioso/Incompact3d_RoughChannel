@@ -648,8 +648,8 @@ module ibm_param
   integer :: inana ! Analytical BC as Input
   integer :: imove
   integer :: isurf
-  character(len=100) :: rmap !Rough surface input file
-  real(mytype), dimension(:,:,:),allocatable :: rough
+  character(len=100) :: surfacefile !Rough surface input file
+  !real(mytype), dimension(:,:,:),allocatable :: rmap
 end module ibm_param
 !############################################################################
 !############################################################################

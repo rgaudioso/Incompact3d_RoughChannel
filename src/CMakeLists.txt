@@ -24,6 +24,7 @@ add_executable(xcompact3d
                     Case-Mixing-layer.f90
                     Case-Periodic-hill.f90
                     Case-Pipe-flow.f90
+		    Case-Rough.f90
                     Case-Sandbox.f90
                     Case-TBL.f90
                     Case-TGV.f90
