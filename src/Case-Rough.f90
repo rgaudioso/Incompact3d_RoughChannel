@@ -447,7 +447,7 @@ contains
     !LOCALS
     integer                                         :: i,j,k,irank,code,is
     integer                                         :: iprint
-    !
+    real(mytype),dimension(nz,nx,2) :: rmat !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices    
     real(mytype)                                    :: hraf
 
     epsi(:,:,:) = zero
@@ -477,15 +477,21 @@ contains
             do i=nxi,nxf
                 xm=xxp(i)
 
-                if (nrank==0..and.iprint==1) print*,'HERE1',i,j,k
+                !if (nrank==0..and.iprint==1) print*,'HERE1',i,j,k
                 hraf = interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
-                if (nrank==0..and.iprint==1) print*,'HERE2',i,j,k
-
+                !if (nrank==0..and.iprint==1) print*,'HERE2',i,j,k
+                
                 if (ym.lt.yly/two.and.ym.lt.hraf) then
                     epsi(i,j,k) = remp
                 elseif (ym.gt.yly/two.and.ym.gt.hraf) then
                     epsi(i,j,k) = remp
                 endif
+                
+                !====DEBUG: WITHOUT NRAF FUNCTIONALITY
+                !if ((ym.le.(rmat(k,i,1))).or.(ym.ge.(yly-rmat(k,i,1)))) then
+                !   epsi(i,j,k)=remp
+                !endif
+                
                 !====DEBUG
                 if (iprint.eq.1) then
                     do irank=-100*nrank,100
@@ -509,11 +515,10 @@ contains
   end subroutine geomcomplex_rough
   !############################################################################
   !############################################################################
-  subroutine read_roughness(rmat,ncols,nrows)
+  subroutine read_roughness(rmat,nrows,ncols)
  
     use param
-    use ibm_param
-    use variables
+    use ibm_param, only : surfacefile
 
     implicit none
 
@@ -580,20 +585,11 @@ contains
       print *, 'Check 3: Matrix data read successfully'
       
       rmat(:,:,2) = rmat(:,:,1)
-            
-      ! Print the matrix to verify (for debugging purposes)
-      print *, 'Matrix read from file:'
-      do i = 1, 3
-         print *, (rmat(i, j, 1), j = 1, 3)
-         print *, (rmat(i, j, 2), j = 1, 3)
-      end do
-      print *, 'Dimensions check: '
-      print *, size(rmat,1)
-      print *, size(rmat,2)
-      print *, size(rmat,3)    
+    
     endif
-  
-    call MPI_BCAST(rmat,nz*nx*2,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
+    
+    call MPI_BCAST(rmat,nrows*ncols*2,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
+    
     !!$!====DEBUG
     !if (nrank.eq.2) then
     !    do k=1,nz
