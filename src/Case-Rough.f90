@@ -434,6 +434,7 @@ contains
     use param, only : zero, one, two, three, ten, pi, yly, zlz
     use param, only : new_rec
     use ibm_param
+    use complex_geometry, only : nraf
 
     implicit none
 
@@ -447,7 +448,7 @@ contains
     !LOCALS
     integer                                         :: i,j,k,irank,code,is
     integer                                         :: iprint
-    real(mytype),dimension(nz,nx,2) :: rmat !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices    
+    !real(mytype),dimension(nz,nx,2) :: rmat  !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices    
     real(mytype)                                    :: hraf
 
     epsi(:,:,:) = zero
@@ -476,22 +477,25 @@ contains
 
             do i=nxi,nxf
                 xm=xxp(i)
-
-                !if (nrank==0..and.iprint==1) print*,'HERE1',i,j,k
-                hraf = interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
-                !if (nrank==0..and.iprint==1) print*,'HERE2',i,j,k
+		
+		!if (nraf.eq.1) then
+		  
+		   ! WITHOUT NRAF FUNCTIONALITY
+                   ! if ((ym.lt.(rmat(k,i,1))).or.(ym.gt.(yly-rmat(k,i,1)))) then
+                   !     epsi(i,j,k)=remp
+                   ! endif		  
+		!else
+                    !if (nrank==0..and.iprint==1) print*,'HERE1',i,j,k
+                    hraf = interp_hraf(i,j,k,xxp,yyp,zzp,nxx,nyy,nzz,iprint)
+                    !if (nrank==0..and.iprint==1) print*,'HERE2',i,j,k
                 
-                if (ym.lt.yly/two.and.ym.lt.hraf) then
-                    epsi(i,j,k) = remp
-                elseif (ym.gt.yly/two.and.ym.gt.hraf) then
-                    epsi(i,j,k) = remp
-                endif
-                
-                !====DEBUG: WITHOUT NRAF FUNCTIONALITY
-                !if ((ym.le.(rmat(k,i,1))).or.(ym.ge.(yly-rmat(k,i,1)))) then
-                !   epsi(i,j,k)=remp
+                    if (ym.lt.yly/two.and.ym.lt.hraf) then
+                       epsi(i,j,k) = remp
+                    elseif (ym.gt.yly/two.and.ym.gt.(yly-hraf)) then
+                       epsi(i,j,k) = remp
+                    endif
+                  
                 !endif
-                
                 !====DEBUG
                 if (iprint.eq.1) then
                     do irank=-100*nrank,100
@@ -515,81 +519,49 @@ contains
   end subroutine geomcomplex_rough
   !############################################################################
   !############################################################################
-  subroutine read_roughness(rmat,nrows,ncols)
+  subroutine read_roughness(nrows,ncols)
  
     use param
-    use ibm_param, only : surfacefile
+    use ibm_param, only : surfacefile, rmat
 
     implicit none
 
     integer                         :: nrows,ncols
-    real(mytype),dimension(nz,nx,2) :: rmat !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices
+    !real(mytype),dimension(nz,nx,2) :: rmat !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices
     character(len=100)              :: filename 
-    integer :: i,j,code, io_status
+    integer :: i,j, io_status
     
-    rmat = zero
-    filename = surfacefile
-    
-    if (nrank.eq.0) then
- !      print *, 'Check 0: found correct filename: ', trim(filename)
- !       print *, 'Matrix dimensions: ',nz,'x',nx
- !       ! Open file
- !       open(47,file=filename,status='old',action='read',iostat=io_status)
- !       if (io_status /= 0) then
- !          print *, 'Error opening file ', trim(filename)
- !          stop
- !       endif
- !       print *, 'Check 1: File opened successfully'
- !         ! Read the matrix data from the file
- !        do k = 1, nz
- !           read(47, *, iostat=io_status) (rmat(k,i,1), i = 1, nx)
- !           read(47, *, iostat=io_status) (rmat(k,i,2), i = 1, nx) 
- !           if (io_status /= 0) then
- !               print *, 'Error reading matrix data from file ', trim(filename)
- !               stop
- !           endif
- !        enddo
-         
- !        close(47)   
- !        print *, 'Check 3: Matrix data read successfully'
-     
- !        !!$===DEBUG Print the matrix to verify 
- !        print *, 'Matrix read from file:'
- !        do k = 1, nz
- !           print *, (rmat(k,i,1), i = 1, nx)
- !        end do
+    !rmat = zero
+    filename = surfacefile    
  
-       ! Read the filename and dimensions from the namelist
-       print *, 'Check 0: found correct filename: ', trim(filename)
-       print *, 'Matrix dimensions: ',nrows,'x',ncols
-   
-       ! Open the file
-       open(unit=33, file=filename, status='old', action='read', iostat=io_status)
-       if (io_status /= 0) then
-          print *, 'Error opening file ', trim(filename)
-       stop
-       endif
-       print *, 'Check 1: File opened successfully'
+     ! Read the filename and dimensions from the namelist
+     print *, 'Check 0: found correct filename: ', trim(filename)
+     print *, 'Matrix dimensions: ',nrows,'x',ncols
   
-      ! Read the matrix data from the file
-      do i = 1, nrows
-        read(33, *, iostat=io_status) (rmat(i, j, 1), j = 1, ncols)
-        !read(33, *, iostat=io_status) (rmat(i, j, 2), j = 1, ncols)        
-        if (io_status /= 0) then
-           print *, 'Error reading matrix data from file ', trim(filename)
-           close(33)
-           stop
-        endif
-      enddo
-      close(33)
-      print *, 'Check 3: Matrix data read successfully'
-      
-      rmat(:,:,2) = rmat(:,:,1)
-    
-    endif
-    
-    call MPI_BCAST(rmat,nrows*ncols*2,MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
-    
+     ! Open the file
+     open(unit=33, file=filename, status='old', action='read', iostat=io_status)
+     if (io_status /= 0) then
+        print *, 'Error opening file ', trim(filename)
+     stop
+     endif
+     print *, 'Check 1: File opened successfully'
+  
+    ! Read the matrix data from the file
+    do i = 1, nrows
+      read(33, *, iostat=io_status) (rmat(i, j, 1), j = 1, ncols)
+      !read(33, *, iostat=io_status) (rmat(i, j, 2), j = 1, ncols)        
+      if (io_status /= 0) then
+         print *, 'Error reading matrix data from file ', trim(filename)
+         close(33)
+         stop
+      endif
+    enddo
+    close(33)
+    print *, 'Check 3: Matrix data read successfully'
+     
+    rmat(:,:,2) = rmat(:,:,1)
+     
+     
     !!$!====DEBUG
     !if (nrank.eq.2) then
     !    do k=1,nz
@@ -614,7 +586,7 @@ contains
     implicit none
 
     real(mytype)                :: interp_hraf
-    real(mytype),dimension(nz,nx,2) :: rmat
+    !real(mytype),dimension(nz,nx,2) :: rmat
     integer                     :: nxx,nyy,nzz
     real(mytype),dimension(nxx) :: xxp
     real(mytype),dimension(nyy) :: yyp
@@ -653,13 +625,13 @@ contains
                 if (xxp(i).ge.xp(ii).and.xxp(i).lt.xp(ii+1)) exit !get local index from mesh grid
             enddo
             !
-            y1=rmat(ii  ,k,jside)
-            y2=rmat(ii+1,k,jside)
+            y1=rmat(k,ii,  jside)
+            y2=rmat(k,ii+1,jside)
             x1=xp(ii  )
             x2=xp(ii+1)
         else !interpolation across domain periodicity
-            y1=rmat(nx,k,jside)
-            y2=rmat(1 ,k,jside)
+            y1=rmat(k,nx,jside)
+            y2=rmat(k,1 ,jside)
             x1=xp(nx)
             x2=xp(nx)+dx
         endif
@@ -678,14 +650,14 @@ contains
                 if (zzp(k).ge.zp(kk).and.zzp(k).lt.zp(kk+1)) exit !get local index from mesh grid
             enddo
             !
-            y1=rmat(i,kk  ,jside)
-            y2=rmat(i,kk+1,jside)
+            y1=rmat(kk,  i,jside)
+            y2=rmat(kk+1,i,jside)
             !
             x1=zp(kk  )
             x2=zp(kk+1)
         else !interpolation across domain periodicity
-            y1=rmat(i,nz,jside)
-            y2=rmat(i,1 ,jside)
+            y1=rmat(nz,i,jside)
+            y2=rmat(1 ,i,jside)
             !
             x1=zp(nz)
             x2=zp(nz)+dz

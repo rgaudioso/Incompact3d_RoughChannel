@@ -649,7 +649,7 @@ module ibm_param
   integer :: imove
   integer :: isurf
   character(len=100) :: surfacefile !Rough surface input file
-  !real(mytype), dimension(:,:,:),allocatable :: rmap
+  real(mytype), allocatable, dimension(:,:,:) :: rmat
 end module ibm_param
 !############################################################################
 !############################################################################

@@ -527,10 +527,9 @@ subroutine parameter(input_i3d)
        write(*,"(' sinusoidal wall ampl.  : ',F17.2)") ampl
        if (isurf==0) write(*,*) 'Smooth wall'
        if (isurf==1) write(*,*) 'Considering sinusoidal roughness'
-       if (isurf==2) then
-          write(*,*) 'Reading realistic roughness map from file'
-          write(*, "(' Surface filename   : ',A17)") surfacefile
-       endif 
+       !if (isurf==2) then
+       write(*,*) 'Reading realistic roughness map from file'
+       write(*, "(' Surface filename   : ',A17)") surfacefile        
      end if
      write(*,*) '==========================================================='
      write(*,"(' Boundary condition velocity field: ')")

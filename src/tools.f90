@@ -1382,14 +1382,14 @@ subroutine stretching()
   !   yp = yp/ypmax*yly
 
   if (nrank == 0) then
-     open(10,file='yp.dat', form='formatted')
+     open(10,file='yp.dat', status='unknown')
      do j=1,ny
-        write(10,*)yp(j)
+        write(10,*) yp(j)
      enddo
      close(10)
-     open(10,file='ypi.dat', form='formatted')
+     open(10,file='ypi.dat', status='unknown')
      do j=1,nym
-        write(10,*)ypi(j)
+        write(10,*) ypi(j)
      enddo
      close(10)
   endif

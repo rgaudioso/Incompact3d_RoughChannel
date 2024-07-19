@@ -48,7 +48,7 @@ contains
 !############################################################################
   !subroutine geomcomplex(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
   subroutine geomcomplex(epsi, nx, nxi, nxf, ny, nyi, nyf, nz, nzi, nzf, xp, yp, zp, remp)
-  
+    
     USE param, ONLY : itype, itype_cyl, itype_hill, itype_channel,&
                       itype_sandbox, itype_pipe, itype_rough
     USE cyl, ONLY : geomcomplex_cyl
@@ -57,7 +57,8 @@ contains
     USE sandbox, ONLY : geomcomplex_sandbox
     USE pipe, ONLY : geomcomplex_pipe
     USE rough, ONLY : geomcomplex_rough, read_roughness
-
+    USE ibm_param, ONLY : rmat
+     
     IMPLICIT NONE
 
     INTEGER :: nx,nxi,nxf,ny,nyi,nyf,nz,nzi,nzf
@@ -66,10 +67,11 @@ contains
     REAL(mytype),DIMENSION(ny) :: yp
     REAL(mytype),DIMENSION(nx) :: xp
     REAL(mytype),DIMENSION(nz) :: zp
-    REAL(mytype),DIMENSION(nz,nx,2) :: rmat 
+    !REAL(mytype),DIMENSION(nz,nx,2) :: rmat 
     REAL(mytype)               :: remp
     LOGICAL,SAVE               :: iread=.true.
     LOGICAL,SAVE               :: iprint_mat=.true.
+    INTEGER                    :: code
 
     IF (itype.EQ.itype_cyl) THEN
 
@@ -93,24 +95,32 @@ contains
        CALL geomcomplex_pipe(epsi, nxi, nxf, ny, nyi, nyf, nzi, nzf, dx, yp, dz, remp)
     
     ELSEIF (itype.EQ.itype_rough) THEN
-  
-       if (iread) then
-           !allocate(rmat(nx,nz,2))
-           CALL read_roughness(rmat,nz,nx)
+    
+       ! Allocate for every MPI rank
+       if (.not.allocated(rmat)) then
+          allocate(rmat(nz,nx,2))
+       endif
+       ! READ ONLY for rank 0 and BCAST
+       if (nrank.eq.0.and.iread) then
+           print *, 'Dimensions check: '
+           print *, size(rmat,1)
+           print *, size(rmat,2)
+           print *, size(rmat,3)  
+           CALL read_roughness(size(rmat,1),size(rmat,2))
            
            ! Print the matrix to verify (for debugging purposes)
            if (iprint_mat) then
               print *, 'Matrix sample read from file:'
-              print *, rmat(1:3, 1:3, 1)
-              print *, rmat(1:3, 1:3, 2)
-           
-              print *, 'Dimensions check: '
-              print *, size(rmat,1)
-              print *, size(rmat,2)
-              print *, size(rmat,3)    
+              print *, rmat(1, 1:5, 1)
+              print *, rmat(1, 1:5, 2)  
            endif
            iread=.false.
            iprint_mat=.false.
+       endif
+       ! Broadcast the matrix from the root to all processes
+       call MPI_BCAST(rmat,size(rmat,1)*size(rmat,2)*size(rmat,3),MPI_DOUBLE_PRECISION,0,MPI_COMM_WORLD,code)
+       if (nrank.eq.0) then
+          print *, 'Matrix broadcasted successfully'
        endif
        !stop
        CALL geomcomplex_rough(epsi, nx, nxi, nxf, ny, nyi, nyf, nz, nzi, nzf, xp, yp, zp, remp)
@@ -191,13 +201,13 @@ contains
       use decomp_2d
       use decomp_2d_io
       use MPI
-      USE var, only : ta2,ta3
+      !USE var, only : ta2,ta3
       use variables, only : xp,zp
       implicit none
       !
       real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
-      !real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
-      !real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
+      real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
+      real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
       integer                                            :: nx,ny,nz,nobjmax
       real(mytype)                                       :: dx,dy,dz
       real(mytype)                                       :: xlx,yly,zlz
@@ -292,7 +302,7 @@ contains
            enddo
         enddo
         call MPI_REDUCE(nobjxmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-        ! if (nrank==0) print*,'        nobjxmax=',mpi_aux_i
+        if (nrank==0) print*,'        nobjxmax=',mpi_aux_i
   
         nobjxraf(:,:)=0
         ibug=0
@@ -320,7 +330,7 @@ contains
            enddo
         enddo
         call MPI_REDUCE(nobjxmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-        ! if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
+        if (nrank==0) print*,'        nobjxmaxraf=',mpi_aux_i
         call MPI_REDUCE(ibug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
         ! if (nrank==0) print*,'        ibug=',mpi_aux_i
         if (nrank==0) print*,'    step 3'
@@ -400,7 +410,8 @@ contains
       !-------------------------------------------------------------------------------
       !Y-PENCIL
         allocate(yepsi(ysize(1),nyraf,ysize(3)))
-        call transpose_x_to_y(ep1,ta2)
+        !call transpose_x_to_y(ep1,ta2)
+        call transpose_x_to_y(ep1,ep2)
   
         if(ncly)then
            dyraf =yly/real(nyraf, mytype)
@@ -427,16 +438,19 @@ contains
   
         nobjy(:,:)=0
         nobjymax=0
-        call transpose_x_to_y(ep1,ta2)
+        !call transpose_x_to_y(ep1,ta2)
+        call transpose_x_to_y(ep1,ep2)
         do k=1,ysize(3)
            do i=1,ysize(1)
               jnum=0
-              if(ta2(i,1,k) == one)then
+              !if(ta2(i,1,k) == one)then
+              if(ep2(i,1,k) == one)then
                  jnum=1
                  nobjy(i,k)=1
               endif
               do j=1,ny-1
-                 if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == one)then
+                 !if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == one)then
+                 if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == one)then
                     jnum=jnum+1
                     nobjy(i,k)=nobjy(i,k)+1
                  endif
@@ -447,7 +461,7 @@ contains
            enddo
         enddo
         call MPI_REDUCE(nobjymax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-        ! if (nrank==0) print*,'        nobjymax=',mpi_aux_i
+        if (nrank==0) print*,'        nobjymax=',mpi_aux_i
   
         nobjyraf(:,:)=0
         jbug=0
@@ -475,7 +489,7 @@ contains
            enddo
         enddo
         call MPI_REDUCE(nobjymaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-        ! if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
+        if (nrank==0) print*,'        nobjymaxraf=',mpi_aux_i
         call MPI_REDUCE(jbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
         ! if (nrank==0) print*,'        jbug=',mpi_aux_i
         if (nrank==0) print*,'    step 6'
@@ -506,11 +520,15 @@ contains
               do i=1,ysize(1)
                  if(nobjy(i,k) /= nobjyraf(i,k))then
                     jobj=0
-                    if(ta2(i,1,k) == one)jobj=jobj+1
+                    !if(ta2(i,1,k) == one)jobj=jobj+1
+                    if(ep2(i,1,k) == one)jobj=jobj+1
                     do j=1,ny-1
-                       if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) ==  one)jobj=jobj+1
-                       if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == zero)jflu=1
-                       if(ta2(i,j,k) ==  one .and. ta2(i,j+1,k) ==  one)jsol=1
+                       !if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) ==  one)jobj=jobj+1
+                       !if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == zero)jflu=1
+                       !if(ta2(i,j,k) ==  one .and. ta2(i,j+1,k) ==  one)jsol=1
+                       if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) ==  one)jobj=jobj+1
+                       if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == zero)jflu=1
+                       if(ep2(i,j,k) ==  one .and. ep2(i,j+1,k) ==  one)jsol=1
                        do jraf=1,nraf
                           if(yepsi(i,jraf+nraf*(j-1)  ,k) == zero .and.&
                              yepsi(i,jraf+nraf*(j-1)+1,k) ==  one)jdebraf=jraf+nraf*(j-1)+1
@@ -551,8 +569,8 @@ contains
       !-------------------------------------------------------------------------------
       !Z-PENCIL
       allocate(zepsi(zsize(1),zsize(2),nzraf))
-      call transpose_y_to_z(ta2,ta3)
-  
+      !call transpose_y_to_z(ta2,ta3)
+      call transpose_y_to_z(ep2,ep3)  
       if(nclz)then
          dzraf=zlz/real(nzraf, mytype)
       else
@@ -578,16 +596,19 @@ contains
   
       nobjz(:,:)=0
       nobjzmax=0
-      call transpose_y_to_z(ta2,ta3)
+      !call transpose_y_to_z(ta2,ta3)
+      call transpose_y_to_z(ep2,ep3)
       do j=1,zsize(2)
          do i=1,zsize(1)
             knum=0
-            if(ta3(i,j,1) == one)then
+            !if(ta3(i,j,1) == one)then
+            if(ep3(i,j,1) == one)then
                knum=1
                nobjz(i,j)=1
             endif
             do k=1,nz-1
-               if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == one)then
+               !if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == one)then
+               if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == one)then
                   knum=knum+1
                   nobjz(i,j)=nobjz(i,j)+1
                endif
@@ -598,7 +619,7 @@ contains
          enddo
       enddo
       call MPI_REDUCE(nobjzmax,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-      ! if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
+      if (nrank==0) print*,'        nobjzmax=',mpi_aux_i
   
       nobjzraf(:,:)=0
       kbug=0
@@ -626,7 +647,7 @@ contains
          enddo
       enddo
       call MPI_REDUCE(nobjzmaxraf,mpi_aux_i,1,MPI_INTEGER,MPI_MAX,0,MPI_COMM_WORLD,code)
-      ! if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
+      if (nrank==0) print*,'        nobjzmaxraf=',mpi_aux_i
       call MPI_REDUCE(kbug,mpi_aux_i,1,MPI_INTEGER,MPI_SUM,0,MPI_COMM_WORLD,code)
       ! if (nrank==0) print*,'        kbug=',mpi_aux_i
       if (nrank==0) print*,'    step 9'
@@ -662,11 +683,15 @@ contains
             do i=1,zsize(1)
                if(nobjz(i,j) /= nobjzraf(i,j))then
                   kobj=0
-                  if(ta3(i,j,1) == one)kobj=kobj+1
+                  !if(ta3(i,j,1) == one)kobj=kobj+1
+                  if(ep3(i,j,1) == one)kobj=kobj+1
                   do k=1,nz-1
-                     if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) ==  one)kobj=kobj+1
-                     if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == zero)kflu=1
-                     if(ta3(i,j,k) ==  one .and. ta3(i,j,k+1) ==  one)ksol=1
+                     !if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) ==  one)kobj=kobj+1
+                     !if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == zero)kflu=1
+                     !if(ta3(i,j,k) ==  one .and. ta3(i,j,k+1) ==  one)ksol=1
+                     if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) ==  one)kobj=kobj+1
+                     if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == zero)kflu=1
+                     if(ep3(i,j,k) ==  one .and. ep3(i,j,k+1) ==  one)ksol=1
                      do kraf=1,nraf
                         if(zepsi(i,j,kraf+nraf*(k-1)  ) == zero .and.&
                            zepsi(i,j,kraf+nraf*(k-1)+1) ==  one)kdebraf=kraf+nraf*(k-1)+1
@@ -873,6 +898,8 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
   implicit none
   !
   real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ep1
+  real(mytype),dimension(ysize(1),ysize(2),ysize(3)) :: ep2
+  real(mytype),dimension(zsize(1),zsize(2),zsize(3)) :: ep3
   integer                            :: nx,ny,nz,nobjmax
   integer,dimension(xstart(2):xend(2),xstart(3):xend(3)) :: nobjx
   integer,dimension(ystart(1):yend(1),ystart(3):yend(3)) :: nobjy
@@ -897,14 +924,14 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      write(*,*) 'xend2:', xend(2)
      write(*,*) 'xend3:', xend(3)
      write(*,*) '++++++++++++++++++++++'
-     write(*,*) 'xsize1:', xsize(1)
-     write(*,*) 'xsize2:', xsize(2)
-     write(*,*) 'xsize3:', xsize(3)
+     write(*,*) 'zsize1:', zsize(1)
+     write(*,*) 'zsize2:', zsize(2)
+     write(*,*) 'zsize3:', zsize(3)
      write(*,*) '++++++++++++++++++++++'
   endif 
   if (nrank==0) then  
-     open(unit=99, file='data/geometry/epsi.dat', status='unknown')
-     ! Write the epsi matrix to the file
+     ! Write the X-epsi matrix to the file
+     open(unit=99, file='data/geometry/xepsi.dat', status='unknown')
      do k=1,xsize(3)
         do j=1,xsize(2)
            do i=1,xsize(1)
@@ -912,6 +939,32 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
               jglobal = xstart(2) + j - 1
               kglobal = xstart(3) + k - 1          
               write(99, *) ep1(i,j,k), iglobal, jglobal, kglobal
+           enddo
+        enddo
+     enddo
+     close(99)
+          ! Write the Y-epsi matrix to the file
+     open(unit=99, file='data/geometry/yepsi.dat', status='unknown')
+     do k=1,ysize(3)
+        do j=1,ysize(2)
+           do i=1,ysize(1)
+              iglobal = ystart(1) + i - 1
+              jglobal = j
+              kglobal = ystart(3) + k - 1           
+              write(99, *) ep2(i,j,k), iglobal, jglobal, kglobal
+           enddo
+        enddo
+     enddo
+     close(99) 
+     ! Write the Z-epsi matrix to the file
+     open(unit=99, file='data/geometry/zepsi.dat', status='unknown')
+     do k=1,zsize(3)
+        do j=1,zsize(2)
+           do i=1,zsize(1)
+              iglobal = zstart(1) + i - 1
+              jglobal = zstart(2) + j - 1
+              kglobal = k           
+              write(99, *) ep3(i,j,k), iglobal, jglobal, kglobal
            enddo
         enddo
      enddo
@@ -978,7 +1031,7 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      do k=xstart(3),xend(3)
         do j=xstart(2),xend(2)
            do i=1,nobjmax         
-              write(99,*) xi(i,j,k),xf(i,j,k), iglobal, jglobal, kglobal
+              write(99,*) xi(i,j,k),xf(i,j,k)
            enddo
         enddo
      enddo
@@ -988,7 +1041,7 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      do k=ystart(3),yend(3)
         do i=ystart(1),yend(1)
            do j=1,nobjmax
-              write(99,*) yi(j,i,k),yf(j,i,k), iglobal, jglobal, kglobal
+              write(99,*) yi(j,i,k),yf(j,i,k)
            enddo
         enddo
      enddo
@@ -998,7 +1051,7 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      do j=zstart(2),zend(2)
         do i=zstart(1),zend(1)
            do k=1,nobjmax
-              write(99,*) zi(k,i,j),zf(k,i,j), iglobal, jglobal, kglobal
+              write(99,*) zi(k,i,j),zf(k,i,j)
            enddo
         enddo
      enddo

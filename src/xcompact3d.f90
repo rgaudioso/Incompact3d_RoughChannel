@@ -251,11 +251,11 @@ subroutine init_xcompact3d()
      endif
   end if
 
-  if ((iibm.eq.2).or.(iibm.eq.3)) then
-     call genepsi3d(ep1)
-  else if (iibm.eq.1) then
-     call body(ux1,uy1,uz1,ep1)
-  endif
+  !if ((iibm.eq.2).or.(iibm.eq.3)) then
+  !   call genepsi3d(ep1)
+  !else if (iibm.eq.1) then
+  !   call body(ux1,uy1,uz1,ep1)
+  !endif
 
   if (mod(itime, ilist) == 0 .or. itime == ifirst) then
      call test_speed_min_max(ux1,uy1,uz1)
