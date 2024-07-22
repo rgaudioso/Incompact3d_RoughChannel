@@ -924,9 +924,9 @@ subroutine write_geomcomplex(nx,ny,nz,ep1,nobjx,nobjy,nobjz,xi,xf,yi,yf,zi,zf,&
      write(*,*) 'xend2:', xend(2)
      write(*,*) 'xend3:', xend(3)
      write(*,*) '++++++++++++++++++++++'
-     write(*,*) 'zsize1:', zsize(1)
-     write(*,*) 'zsize2:', zsize(2)
-     write(*,*) 'zsize3:', zsize(3)
+     write(*,*) 'xsize1:', xsize(1)
+     write(*,*) 'xsize2:', xsize(2)
+     write(*,*) 'xsize3:', xsize(3)
      write(*,*) '++++++++++++++++++++++'
   endif 
   if (nrank==0) then  

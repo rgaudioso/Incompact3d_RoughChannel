@@ -131,6 +131,46 @@ contains
              enddo
           enddo
        enddo
+    elseif (iin==3) then ! Init to turbulent flows using random numbers (ONLY CENTERLINE) + lam profile
+       call system_clock(count=code)
+       if (iin.eq.3) code=0
+       call random_seed(size = ii)
+       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
+
+       call random_number(ux1)
+       call random_number(uy1)
+       call random_number(uz1)
+       !modulation of the random noise + initial velocity profile
+       do k=1,xsize(3)
+          do j=1,xsize(2)
+             if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
+             um=exp(-zptwo*y*y)
+             do i=1,xsize(1)
+                if (idir_stream == 1) then
+                   if (ep1(i,j,k).eq.0) then
+                      if (y.lt.yly/2+0.35*yly.or.y.ge.yly/2-0.35*yly/2) then
+                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                         uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                         uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                      else !Avoid noise close to walls
+                         ux1(i,j,k)=one-y*y
+                         uy1(i,j,k)=zero
+                         uz1(i,j,k)=zero
+                      endif
+                   else !Inside the rough walls
+                      ux1(i,j,k)=zero
+                      uy1(i,j,k)=zero
+                      uz1(i,j,k)=zero
+                   endif
+                else !Not interesting for rough channel IBM
+                   uz1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                   uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                   ux1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                endif
+             enddo
+          enddo
+       enddo    
     elseif (iin == 4) then ! SEM
        call sem_init_rough(ux1, uy1, uz1)
     endif
@@ -604,8 +644,8 @@ contains
     if (nxx.gt.nx) rafdir=1       !(nxraf,ny   ,nz   )
     if (nyy.gt.ny) rafdir=2       !(nx   ,nyraf,nz   )
     if (nzz.gt.nz) rafdir=3       !(nx   ,ny   ,nzraf)
-    !!$!====DEBUG
-    !!$if (nrank.eq.0.and.iprint.eq.1) print*, 'rafdir=', rafdir
+    !====DEBUG
+    if (nrank.eq.0.and.iprint.eq.1) print*, 'rafdir=', rafdir
 
     !Lower or upper wall?
     if (yyp(j).lt.yly/two) then
@@ -666,7 +706,7 @@ contains
         !linear interpolation
         interp_hraf = ((y2-y1)/(x2-x1))*(zzp(k)-x1)+y1 !linear interpolation
     else
-        interp_hraf = rmat(i,k,jside) !no interpolation needed
+        interp_hraf = rmat(k,i,jside) !no interpolation needed
     endif
     !
     return
