@@ -28,6 +28,7 @@ contains
     use decomp_2d_io
     use variables
     use param
+    use ibm_param, only : offset
     use MPI
     use mhd, only : mhd_active, Bm,Bmean
 
@@ -53,31 +54,38 @@ contains
         endif
         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
     endif
-
+    !+++++++++++++++++++++++++++++++++ INSERIRE QUI MBC INIT PHI++++++++++++++++++++++++++++++++++++++++++++++
     if (iscalar==1) then
        if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
           write(*,*) 'Imposing linear temperature profile'
        end if
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-             if (istret/=0) y=yp(j+xstart(2)-1)
-             do i=1,xsize(1)
-                phi1(i,j,k,:) = one - y/yly
-             enddo
-          enddo
+       do is=1,numscalar
+         do k=1,xsize(3)
+            do j=1,xsize(2)
+               if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+               if (istret/=0) y=yp(j+xstart(2)-1)
+               do i=1,xsize(1)
+                  if (ep1(i,j,k).eq.0) then
+                     phi1(i,j,k,:) = one - y/(yly-2*offset)
+                  else
+                     phi1(i,j,k,:) = zero
+                  endif
+               enddo
+            enddo
+         enddo
        enddo
 
-       phi1(:,:,:,:) = zero !change as much as you want
-       if ((nclyS1 == 2).and.(xstart(2) == 1)) then
-         !! Generate a hot patch on bottom boundary
-         phi1(:,1,:,:) = one
-       endif
-       if ((nclySn == 2).and.(xend(2) == ny)) then
-         phi1(:,xsize(2),:,:) = zero
-       endif
+       !phi1(:,:,:,:) = zero !change as much as you want
+       !if ((nclyS1 == 2).and.(xstart(2) == 1)) then
+       !  !! Generate a hot patch on bottom boundary
+       !  phi1(:,1,:,:) = one
+       !endif
+       !if ((nclySn == 2).and.(xend(2) == ny)) then
+       !  phi1(:,xsize(2),:,:) = zero
+       !endif
     endif
-!
+   !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+   !++++++++++++++++++++++++++++++++++++INIT FLOW VEL++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ux1=zero
     uy1=zero
     uz1=zero
@@ -132,6 +140,9 @@ contains
           enddo
        enddo
     elseif (iin==3) then ! Init to turbulent flows using random numbers (ONLY CENTERLINE) + lam profile
+       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
+           write(*,*) 'Imposing Poiseuille vel. profile with centerline noise'
+       end if
        call system_clock(count=code)
        if (iin.eq.3) code=0
        call random_seed(size = ii)
@@ -145,12 +156,14 @@ contains
           do j=1,xsize(2)
              if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
              if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
-             um=exp(-zptwo*y*y)
+             !um=exp(-zptwo*y*y)
+             um=exp(-ten*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
-                      if (y.lt.(yly/2+0.35*yly/2).or.y.ge.(yly/2-0.35*yly/2)) then
-                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                      if (y.lt.(yly/2+0.5*yly/2).or.y.ge.(yly/2-0.5*yly/2)) then
+                         !Poiseuille flow (nondim) => u(y) = 1 - y*y
+                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(one-y*y)
                          uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                          uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
                       else !Avoid noise close to walls
@@ -170,11 +183,22 @@ contains
                 endif
              enddo
           enddo
-       enddo    
+       enddo
+       !!$=====DEBUG test in SERIAL
+       if (nrank==0) then 
+         ! Write the initial ux to file
+         open(unit=98, file='ux_init.dat', status='unknown')
+         do j=1,xsize(2)   
+            write(98, *) ux1(1,j,1)
+         enddo
+         close(98)
+       endif
+       !!===========
     elseif (iin == 4) then ! SEM
        call sem_init_rough(ux1, uy1, uz1)
     endif
-   
+    
+   !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !INIT FOR G AND U=MEAN FLOW + NOISE 
     do k=1,xsize(3)
        do j=1,xsize(2)

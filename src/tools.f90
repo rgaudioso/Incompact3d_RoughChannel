@@ -1384,15 +1384,15 @@ subroutine stretching()
   !   ypmax = yp(ny)
   !   yp = yp/ypmax*yly
     ! Check for immersed points
-  if (iibm==2.and.nrank==0) then
-     do j=1,ny
-        if (yp(j).le.stret_threshold) count_imm = count_imm+1
-     enddo
-     if (count_imm.lt.10) then
-        print *, 'Error: not enough immersed points, will stop here!', count_imm
-        stop
-     endif
-  endif
+  !if (iibm==2.and.nrank==0) then
+  !   do j=1,ny
+  !      if (yp(j).le.stret_threshold) count_imm = count_imm+1
+  !   enddo
+  !   if (count_imm.lt.10) then
+  !      print *, 'Error: not enough immersed points, will stop here!', count_imm
+  !      stop
+  !   endif
+  !endif
 
   if (nrank == 0) then
      open(10,file='yp.dat', form='formatted')

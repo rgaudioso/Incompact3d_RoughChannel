@@ -201,7 +201,7 @@ contains
       use decomp_2d
       use decomp_2d_io
       use MPI
-      !USE var, only : ta2,ta3
+      use var, only : ta2,ta3
       use variables, only : xp,zp
       implicit none
       !
@@ -410,8 +410,8 @@ contains
       !-------------------------------------------------------------------------------
       !Y-PENCIL
         allocate(yepsi(ysize(1),nyraf,ysize(3)))
-        !call transpose_x_to_y(ep1,ta2)
-        call transpose_x_to_y(ep1,ep2)
+        call transpose_x_to_y(ep1,ta2)
+        !call transpose_x_to_y(ep1,ep2)
   
         if(ncly)then
            dyraf =yly/real(nyraf, mytype)
@@ -438,19 +438,19 @@ contains
   
         nobjy(:,:)=0
         nobjymax=0
-        !call transpose_x_to_y(ep1,ta2)
-        call transpose_x_to_y(ep1,ep2)
+        call transpose_x_to_y(ep1,ta2)
+        !call transpose_x_to_y(ep1,ep2)
         do k=1,ysize(3)
            do i=1,ysize(1)
               jnum=0
-              !if(ta2(i,1,k) == one)then
-              if(ep2(i,1,k) == one)then
+              if(ta2(i,1,k) == one)then
+              !if(ep2(i,1,k) == one)then
                  jnum=1
                  nobjy(i,k)=1
               endif
               do j=1,ny-1
-                 !if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == one)then
-                 if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == one)then
+                 if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == one)then
+                 !if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == one)then
                     jnum=jnum+1
                     nobjy(i,k)=nobjy(i,k)+1
                  endif
@@ -520,15 +520,15 @@ contains
               do i=1,ysize(1)
                  if(nobjy(i,k) /= nobjyraf(i,k))then
                     jobj=0
-                    !if(ta2(i,1,k) == one)jobj=jobj+1
-                    if(ep2(i,1,k) == one)jobj=jobj+1
+                    if(ta2(i,1,k) == one)jobj=jobj+1
+                    !if(ep2(i,1,k) == one)jobj=jobj+1
                     do j=1,ny-1
-                       !if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) ==  one)jobj=jobj+1
-                       !if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == zero)jflu=1
-                       !if(ta2(i,j,k) ==  one .and. ta2(i,j+1,k) ==  one)jsol=1
-                       if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) ==  one)jobj=jobj+1
-                       if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == zero)jflu=1
-                       if(ep2(i,j,k) ==  one .and. ep2(i,j+1,k) ==  one)jsol=1
+                       if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) ==  one)jobj=jobj+1
+                       if(ta2(i,j,k) == zero .and. ta2(i,j+1,k) == zero)jflu=1
+                       if(ta2(i,j,k) ==  one .and. ta2(i,j+1,k) ==  one)jsol=1
+                       !if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) ==  one)jobj=jobj+1
+                       !if(ep2(i,j,k) == zero .and. ep2(i,j+1,k) == zero)jflu=1
+                       !if(ep2(i,j,k) ==  one .and. ep2(i,j+1,k) ==  one)jsol=1
                        do jraf=1,nraf
                           if(yepsi(i,jraf+nraf*(j-1)  ,k) == zero .and.&
                              yepsi(i,jraf+nraf*(j-1)+1,k) ==  one)jdebraf=jraf+nraf*(j-1)+1
@@ -569,8 +569,8 @@ contains
       !-------------------------------------------------------------------------------
       !Z-PENCIL
       allocate(zepsi(zsize(1),zsize(2),nzraf))
-      !call transpose_y_to_z(ta2,ta3)
-      call transpose_y_to_z(ep2,ep3)  
+      call transpose_y_to_z(ta2,ta3)
+      !call transpose_y_to_z(ep2,ep3)  
       if(nclz)then
          dzraf=zlz/real(nzraf, mytype)
       else
@@ -596,19 +596,19 @@ contains
   
       nobjz(:,:)=0
       nobjzmax=0
-      !call transpose_y_to_z(ta2,ta3)
-      call transpose_y_to_z(ep2,ep3)
+      call transpose_y_to_z(ta2,ta3)
+      !call transpose_y_to_z(ep2,ep3)
       do j=1,zsize(2)
          do i=1,zsize(1)
             knum=0
-            !if(ta3(i,j,1) == one)then
-            if(ep3(i,j,1) == one)then
+            if(ta3(i,j,1) == one)then
+            !if(ep3(i,j,1) == one)then
                knum=1
                nobjz(i,j)=1
             endif
             do k=1,nz-1
-               !if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == one)then
-               if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == one)then
+               if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == one)then
+               !if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == one)then
                   knum=knum+1
                   nobjz(i,j)=nobjz(i,j)+1
                endif
@@ -683,15 +683,15 @@ contains
             do i=1,zsize(1)
                if(nobjz(i,j) /= nobjzraf(i,j))then
                   kobj=0
-                  !if(ta3(i,j,1) == one)kobj=kobj+1
-                  if(ep3(i,j,1) == one)kobj=kobj+1
+                  if(ta3(i,j,1) == one)kobj=kobj+1
+                  !if(ep3(i,j,1) == one)kobj=kobj+1
                   do k=1,nz-1
-                     !if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) ==  one)kobj=kobj+1
-                     !if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == zero)kflu=1
-                     !if(ta3(i,j,k) ==  one .and. ta3(i,j,k+1) ==  one)ksol=1
-                     if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) ==  one)kobj=kobj+1
-                     if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == zero)kflu=1
-                     if(ep3(i,j,k) ==  one .and. ep3(i,j,k+1) ==  one)ksol=1
+                     if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) ==  one)kobj=kobj+1
+                     if(ta3(i,j,k) == zero .and. ta3(i,j,k+1) == zero)kflu=1
+                     if(ta3(i,j,k) ==  one .and. ta3(i,j,k+1) ==  one)ksol=1
+                     !if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) ==  one)kobj=kobj+1
+                     !if(ep3(i,j,k) == zero .and. ep3(i,j,k+1) == zero)kflu=1
+                     !if(ep3(i,j,k) ==  one .and. ep3(i,j,k+1) ==  one)ksol=1
                      do kraf=1,nraf
                         if(zepsi(i,j,kraf+nraf*(k-1)  ) == zero .and.&
                            zepsi(i,j,kraf+nraf*(k-1)+1) ==  one)kdebraf=kraf+nraf*(k-1)+1
