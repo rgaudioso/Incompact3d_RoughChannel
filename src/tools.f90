@@ -1222,8 +1222,10 @@ subroutine stretching()
   implicit none
 
   real(mytype) :: yinf,den,xnum,xcx,den1,den2,den3,den4,xnum1,cst
-  integer :: j
-
+  integer :: j, count_imm
+  
+  count_imm = 0
+  
   yinf=-yly/two
   den=two*beta*yinf
   xnum=-yinf-sqrt(pi*pi*beta*beta+yinf*yinf)
