@@ -63,7 +63,7 @@ subroutine parameter(input_i3d)
   NAMELIST /LESModel/ jles, smagcst, smagwalldamp, nSmag, walecst, maxdsmagcst, iconserv
   NAMELIST /Tripping/ itrip,A_tr,xs_tr_tbl,ys_tr_tbl,ts_tr_tbl,x0_tr_tbl
   NAMELIST /ibmstuff/ cex,cey,cez,ra,rai,rao,nobjmax,nraf,nvol,iforces, npif, izap, ianal, imove, thickness, chord, omega, &
-       ubcx,ubcy,ubcz,rads, c_air, offset, ampl, isurf, surfacefile
+       ubcx,ubcy,ubcz,rads, c_air, offset, ampl, isurf, surfacefile, stret_threshold, wall_res
   NAMELIST /ForceCVs/ xld, xrd, yld, yud!, zld, zrd
   NAMELIST /LMN/ dens1, dens2, prandtl, ilmn_bound, ivarcoeff, ilmn_solve_temp, &
        massfrac, mol_weight, imultispecies, primary_species, &
@@ -466,6 +466,8 @@ subroutine parameter(input_i3d)
      write(*,"(' nz                     : ',I17)") nz
      write(*,*) '==========================================================='
      write(*,"(' istret                 : ',I17)") istret
+     write(*,"(' stretching threshold   : ',F17.8)") stret_threshold
+     write(*,"(' immersed wall res.     : ',F17.8)") wall_res
      write(*,"(' beta                   : ',F17.8)") beta
      write(*,*) '==========================================================='
      write(*,"(' nu0nu                  : ',F17.8)") nu0nu
@@ -656,6 +658,8 @@ subroutine parameter_defaults()
   isurf = 0
   offset = 0
   ampl = 0
+  stret_threshold = 0
+  wall_res = 0
 
   nvol = 0
   iforces = 0

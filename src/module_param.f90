@@ -645,6 +645,7 @@ module ibm_param
   use decomp_2d_constants, only : mytype
   real(mytype) :: cex,cey,cez,ra,rai,rao,ubcx,ubcy,ubcz,rads,c_air,offset, ampl
   real(mytype) :: chord,thickness,omega
+  real(mytype) :: stret_threshold, wall_res
   integer :: inana ! Analytical BC as Input
   integer :: imove
   integer :: isurf

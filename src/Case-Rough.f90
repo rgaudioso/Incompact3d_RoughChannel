@@ -149,7 +149,7 @@ contains
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
-                      if (y.lt.yly/2+0.35*yly.or.y.ge.yly/2-0.35*yly/2) then
+                      if (y.lt.(yly/2+0.35*yly/2).or.y.ge.(yly/2-0.35*yly/2)) then
                          ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
                          uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                          uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
