@@ -1218,6 +1218,7 @@ subroutine stretching()
   use param
   use var
   use mpi
+  use ibm_param, only : stret_threshold
 
   implicit none
 
