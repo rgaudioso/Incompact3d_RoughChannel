@@ -56,24 +56,26 @@ contains
     endif
     !+++++++++++++++++++++++++++++++++ INSERIRE QUI MBC INIT PHI++++++++++++++++++++++++++++++++++++++++++++++
     if (iscalar==1) then
-       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-          write(*,*) 'Imposing linear temperature profile'
-       end if
-       do is=1,numscalar
-         do k=1,xsize(3)
-            do j=1,xsize(2)
-               if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-               if (istret/=0) y=yp(j+xstart(2)-1)
-               do i=1,xsize(1)
-                  if (ep1(i,j,k).eq.0) then
-                     phi1(i,j,k,:) = one - y/(yly-2*offset)
-                  else
-                     phi1(i,j,k,:) = zero
-                  endif
-               enddo
-            enddo
-         enddo
-       enddo
+       !if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
+       !   write(*,*) 'Imposing linear temperature profile'
+       !endif
+       !do is=1,numscalar
+       !  do k=1,xsize(3)
+       !     do j=1,xsize(2)
+       !        if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+       !        if (istret/=0) y=yp(j+xstart(2)-1)
+       !        do i=1,xsize(1)
+       !           if (y.le.(yly/two).and.ep1(i,j,k).eq.0) then
+       !              phi1(i,j,k,:) = one + y/yly
+       !           elseif (y.gt.(yly/two).and.ep1(i,j,k).eq.0) then
+       !              phi1(i,j,k,:) = one - y/yly                  
+       !           else
+       !              phi1(i,j,k,:) = zero
+       !           endif
+       !        enddo
+       !     enddo
+       !  enddo
+       !enddo
 
        !phi1(:,:,:,:) = zero !change as much as you want
        !if ((nclyS1 == 2).and.(xstart(2) == 1)) then
@@ -83,7 +85,44 @@ contains
        !if ((nclySn == 2).and.(xend(2) == ny)) then
        !  phi1(:,xsize(2),:,:) = zero
        !endif
-    endif
+    !   if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
+    !      write(*,*) 'Imposing quadratic (Poiseuille-like) temperature profile'
+    !   endif
+    !   do is=1,numscalar
+    !     do k=1,xsize(3)
+    !        do j=1,xsize(2)
+    !           if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+    !           if (istret/=0) y=yp(j+xstart(2)-1)
+    !           do i=1,xsize(1)
+    !              if (ep1(i,j,k).eq.0) then
+    !                 phi1(i,j,k,:) = one - y*y               
+    !              else
+    !                 phi1(i,j,k,:) = zero
+    !              endif
+    !           enddo
+    !        enddo
+    !     enddo
+    !   enddo
+    !endif      
+       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
+          write(*,*) 'Imposing quadratic (Poiseuille-like) temperature profile'
+       endif
+       do is=1,numscalar
+         do k=1,xsize(3)
+            do j=1,xsize(2)
+               if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
+               if (istret/=0) y=yp(j+xstart(2)-1)
+               do i=1,xsize(1)
+                  if (ep1(i,j,k).eq.0) then
+                     phi1(i,j,k,:) = one                
+                  else
+                     phi1(i,j,k,:) = zero
+                  endif
+               enddo
+            enddo
+         enddo
+       enddo
+    endif  
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !++++++++++++++++++++++++++++++++++++INIT FLOW VEL++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     ux1=zero
