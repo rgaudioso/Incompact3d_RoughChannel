@@ -291,7 +291,9 @@ contains
        if (iimplicit <= 0) then
           if ((nclyS1 == 2).and.(xstart(2) == 1)) then
              !! Generate a hot patch on bottom boundary
-             phi(:,1,:,:) = one
+             !phi(:,1,:,:) = one
+	     !! Keep T = Tw on bottom boundary
+             phi(:,1,:,:) = zero
           endif
           if ((nclySn == 2).and.(xend(2) == ny)) THEN
              phi(:,xsize(2),:,:) = zero
