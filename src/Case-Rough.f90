@@ -105,7 +105,7 @@ contains
     !   enddo
     !endif      
        if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-          write(*,*) 'Imposing quadratic (Poiseuille-like) temperature profile'
+          write(*,*) 'Imposing uniform temperature profile'
        endif
        do is=1,numscalar
          do k=1,xsize(3)
@@ -122,6 +122,14 @@ contains
             enddo
          enddo
        enddo
+       phi1(:,:,:,:) = zero !change as much as you want ????
+       if ((nclyS1 == 2).and.(xstart(2) == 1)) then
+         !! Generate T=Tw patch on bottom boundary
+         phi1(:,1,:,:) = zero
+       endif
+       if ((nclySn == 2).and.(xend(2) == ny)) then
+         phi1(:,xsize(2),:,:) = zero
+       endif
     endif  
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !++++++++++++++++++++++++++++++++++++INIT FLOW VEL++++++++++++++++++++++++++++++++++++++++++++++++++++++++
