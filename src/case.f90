@@ -500,13 +500,13 @@ contains
   !!              momentum equations.
   !!
   !##################################################################
-  subroutine momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1)
+  subroutine momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1, ep1)
 
     use mhd, only: mhd_active,momentum_forcing_mhd
 
     implicit none
 
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), nrhotime) :: rho1
     real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3), numscalar) :: phi1
     real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
@@ -517,7 +517,7 @@ contains
    
     elseif (itype.eq.itype_rough) then
 
-       call momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1)
+       call momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1, ep1)
    
     elseif (itype.eq.itype_abl) then
 
