@@ -536,7 +536,7 @@ contains
     if (nrank == 0) write(*,*)'## MomRHS ILMN duz1 ', dep1
 #endif
     !! Additional forcing
-    call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1)
+    call momentum_forcing(dux1, duy1, duz1, rho1, ux1, uy1, uz1, phi1, ep1)
 #ifdef DEBG
     dep=maxval(abs(dux1))
     call MPI_ALLREDUCE(dep,dep1,1,real_type,MPI_MAX,MPI_COMM_WORLD,code)
