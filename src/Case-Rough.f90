@@ -106,7 +106,7 @@ contains
                if (istret/=0) y=yp(j+xstart(2)-1)
                do i=1,xsize(1)
                   if (ep1(i,j,k).eq.0) then
-                     phi1(i,j,k,:) = one !zero                
+                     phi1(i,j,k,:) = zero                 
                   else
                      phi1(i,j,k,:) = zero
                   endif
@@ -196,17 +196,17 @@ contains
              if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
              if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
              !um=exp(-zptwo*y*y)
-             um=exp(-two*y*y)
+             um=exp(-ten*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
                       if (y.lt.(yly/2+0.5*yly/2).or.y.ge.(yly/2-0.5*yly/2)) then
                          !Poiseuille flow (nondim) => u(y) = 1 - y*y
-                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one !(one-y*y)
+                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
                          uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                          uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
                       else !Avoid noise close to walls
-                         ux1(i,j,k)=one !-y*y
+                         ux1(i,j,k)=one-y*y
                          uy1(i,j,k)=zero
                          uz1(i,j,k)=zero
                       endif
