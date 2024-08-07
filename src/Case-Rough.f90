@@ -507,13 +507,12 @@ contains
   !! DESCRIPTION: Applies rotation for t < spinup_time.
   !!
   !############################################################################
-  subroutine momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1, ep1)
+  subroutine momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1)
 
     implicit none
 
-    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1
-    integer :: i,j,k
+    real(mytype), intent(in), dimension(xsize(1), xsize(2), xsize(3)) :: ux1, uy1, uz1
+    real(mytype), dimension(xsize(1), xsize(2), xsize(3), ntime) :: dux1, duy1, duz1    
 
     if (cpg) then
         !! fcpg: add constant pressure gradient in streamwise direction
@@ -530,22 +529,8 @@ contains
           write(*,*) 'Rotating turbulent rough at speed ',wrotation
        dux1(:,:,:,1) = dux1(:,:,:,1) - wrotation*uy1(:,:,:)
        duy1(:,:,:,1) = duy1(:,:,:,1) + wrotation*ux1(:,:,:)
-    elseif (itime < spinup_time .and. iin == 3) then
-       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-          write(*,*) 'Rotating turbulent rough at speed ',wrotation    
-          do k=1,xsize(3)
-             do j=1,xsize(2)
-                do i=1,xsize(1)
-	           if (ep1(i,j,k).eq.0) then
-	              dux1(i,j,k,1) = dux1(i,j,k,1) - wrotation*uy1(i,j,k)
-                      duy1(i,j,k,1) = duy1(i,j,k,1) + wrotation*ux1(i,j,k)
-	           endif
-	        enddo
-             enddo
-          enddo
-       endif
     endif
-                      
+    
   end subroutine momentum_forcing_rough
   !############################################################################
   !############################################################################
