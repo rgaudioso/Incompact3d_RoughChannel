@@ -33,7 +33,8 @@ module var
   real(mytype), save, allocatable, dimension(:,:,:) :: f1,fm1
 
   !arrays for statistic collection
-  real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+  !real(mytype), save, allocatable, dimension(:,:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+  real(mytype), save, allocatable, dimension(:,:) :: umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
   real(mytype), save, allocatable, dimension(:,:,:,:) :: phimean,phiphimean,uphimean,vphimean,wphimean
 
   !arrays for visualization
