@@ -272,34 +272,69 @@ contains
     uvisu=zero
 
     !arrays statistics
-    allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! allocate (umean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! umean=zero
+   ! allocate (vmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! vmean=zero
+   ! allocate (wmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! wmean=zero
+   ! allocate (pmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! pmean=zero
+
+   ! allocate (uumean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! uumean=zero
+   ! allocate (vvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! vvmean=zero
+   ! allocate (wwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! wwmean=zero
+   ! allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! uvmean=zero
+   ! allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! uwmean=zero
+   ! allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+   ! vwmean=zero
+
+   ! allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    !phimean=zero
+   ! allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    !phiphimean=zero
+
+    !allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    !tmean=zero
+
+    !arrays statistics
+    allocate (umean(xstS(2):xenS(2),xstS(3):xenS(3)))
     umean=zero
-    allocate (vmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (vmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     vmean=zero
-    allocate (wmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (wmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     wmean=zero
-    allocate (pmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (pmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     pmean=zero
 
-    allocate (uumean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (uumean(xstS(2):xenS(2),xstS(3):xenS(3)))
     uumean=zero
-    allocate (vvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (vvmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     vvmean=zero
-    allocate (wwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (wwmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     wwmean=zero
-    allocate (uvmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (uvmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     uvmean=zero
-    allocate (uwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (uwmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     uwmean=zero
-    allocate (vwmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (vwmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     vwmean=zero
 
-    allocate (phimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    allocate (phimean(xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
     phimean=zero
-    allocate (phiphimean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+    allocate (phiphimean(xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
     phiphimean=zero
+    if (itype.eq.itype_rough) then
+        allocate (uphimean(xstS(2):xenS(2),xstS(3):xenS(3),numscalar))
+        uphimean=zero
+    endif
 
-    allocate (tmean(xstS(1):xenS(1),xstS(2):xenS(2),xstS(3):xenS(3)))
+    allocate (tmean(xstS(2):xenS(2),xstS(3):xenS(3)))
     tmean=zero
 
     !Y PENCILS
