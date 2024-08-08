@@ -410,11 +410,11 @@ contains
     USE decomp_2d_io
     USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
     USE var, only : phimean, phiphimean,uphimean
-    USE var, only : phismean, phisphismean
+    !USE var, only : phismean, phisphismean
     USE var, only : ta1, pp1, di1
     USE var, only : ppi3, dip3
     USE var, only : pp2, ppi2, dip2
-    USE var, only : phis1
+    !USE var, only : phis1
 
     USE var, ONLY : nxmsize, nymsize, nzmsize
     USE param
@@ -590,7 +590,6 @@ contains
         call decomp_2d_write_plane(1,ta1,1,1,filename)
 
         if (iscalar==1) then
-            icht=0
             do is=1, numscalar
                 write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
                 ta1(1,:,:)=phimean(:,:,is)
@@ -1131,5 +1130,4 @@ contains
   !
   return
   end subroutine axial_averaging
-end module pipe
 end module rough
