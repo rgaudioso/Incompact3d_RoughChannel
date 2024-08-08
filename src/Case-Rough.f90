@@ -381,17 +381,16 @@ contains
   end subroutine rough_cfr
   !############################################################################
   !############################################################################
-  !subroutine postprocess_rough(ux1,uy1,uz1,pp3,phi1,ep1)
+  subroutine postprocess_rough(ux1,uy1,uz1,pp3,phi1,ep1)
+    use var, ONLY : nzmsize
 
-  !  use var, ONLY : nzmsize
+    implicit none
 
-  !  implicit none
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
+    real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+    real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
 
-  !  real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-  !  real(mytype), intent(in), dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-  !  real(mytype), intent(in), dimension(ph1%zst(1):ph1%zen(1),ph1%zst(2):ph1%zen(2),nzmsize,npress) :: pp3
-
-  !end subroutine postprocess_rough
+  end subroutine postprocess_rough
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !!
   !!  SUBROUTINE: postprocess_pipe
@@ -401,207 +400,208 @@ contains
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   !********************************************************************
   !
-  SUBROUTINE postprocess_rough(ux1,uy1,uz1,pp3,phi1,ep1) !From Rodrigo Vicente Cruz
+  !SUBROUTINE postprocess_rough(ux1,uy1,uz1,pp3,phi1,ep1) !From Rodrigo Vicente Cruz
   !
   !********************************************************************
 
-    USE MPI
-    USE decomp_2d
-    USE decomp_2d_io
-    USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
-    USE var, only : phimean, phiphimean,uphimean
-    !USE var, only : phismean, phisphismean
-    USE var, only : ta1, pp1, di1
-    USE var, only : ppi3, dip3
-    USE var, only : pp2, ppi2, dip2
-    !USE var, only : phis1
+  !  USE MPI
+  !  USE decomp_2d
+  !  USE decomp_2d_io
+  !  USE var, only : umean,vmean,wmean,pmean,uumean,vvmean,wwmean,uvmean,uwmean,vwmean,tmean
+  !  USE var, only : phimean, phiphimean,uphimean
+  !  !USE var, only : phismean, phisphismean
+  !  USE var, only : ta1, pp1, di1
+  !  USE var, only : ppi3, dip3
+  !  USE var, only : pp2, ppi2, dip2
+  ! !USE var, only : phis1
 
-    USE var, ONLY : nxmsize, nymsize, nzmsize
-    USE param
-    USE variables
+  !  USE var, ONLY : nxmsize, nymsize, nzmsize
+  !  USE param
+  !  USE variables
 
-    implicit none
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
-    real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-    real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
-    character(len=30) :: filename
+  !  implicit none
+  !  real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3)) :: ux1, uy1, uz1, ep1
+  !  real(mytype),intent(in),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
+  !  real(mytype), dimension(ph1%zst(1):ph1%zen(1), ph1%zst(2):ph1%zen(2), nzmsize, npress), intent(in) :: pp3
+  !  character(len=30) :: filename
 
-    integer :: is
-    
-    if (itime.lt.initstat) then
-       return
-    endif
+  !  integer :: is
+  !  
+  !  if (itime.lt.initstat) then
+  !     return
+  !  endif
 
     !! Mean pressure
     !WORK Z-PENCILS
-    call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
-         (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
-    !WORK Y-PENCILS
-    call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
-    call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
-         (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
-    !WORK X-PENCILS
-    call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
-    call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
-         nxmsize,xsize(1),xsize(2),xsize(3),1)
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    pmean(:,:)=pmean(:,:)+ta1(1,:,:)
+  !  call interzpv(ppi3,pp3(:,:,:,1),dip3,sz,cifip6z,cisip6z,ciwip6z,cifz6,cisz6,ciwz6,&
+  !       (ph3%zen(1)-ph3%zst(1)+1),(ph3%zen(2)-ph3%zst(2)+1),nzmsize,zsize(3),1)
+  !  !WORK Y-PENCILS
+  !  call transpose_z_to_y(ppi3,pp2,ph3) !nxm nym nz
+  !  call interypv(ppi2,pp2,dip2,sy,cifip6y,cisip6y,ciwip6y,cify6,cisy6,ciwy6,&
+  !       (ph3%yen(1)-ph3%yst(1)+1),nymsize,ysize(2),ysize(3),1)
+  !  !WORK X-PENCILS
+  !  call transpose_y_to_x(ppi2,pp1,ph2) !nxm ny nz
+  !  call interxpv(ta1,pp1,di1,sx,cifip6,cisip6,ciwip6,cifx6,cisx6,ciwx6,&
+  !       nxmsize,xsize(1),xsize(2),xsize(3),1)
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * ta1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  pmean(:,:)=pmean(:,:)+ta1(1,:,:)
+  
 
     !! Mean velocity
     !!umean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
-    else
-       ta1(:,:,:) = ux1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    umean(:,:)=umean(:,:)+ta1(1,:,:)
-    !!vmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
-    else
-       ta1(:,:,:) = uy1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    vmean(:,:)=vmean(:,:)+ta1(1,:,:)
-    !!wmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
-    else
-       ta1(:,:,:) = uz1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    wmean(:,:)=wmean(:,:)+ta1(1,:,:)
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)
+  !  else
+  !     ta1(:,:,:) = ux1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  umean(:,:)=umean(:,:)+ta1(1,:,:)
+  !  !!vmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)
+  !  else
+  !     ta1(:,:,:) = uy1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  vmean(:,:)=vmean(:,:)+ta1(1,:,:)
+  !  !!wmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)
+  !  else
+  !     ta1(:,:,:) = uz1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  wmean(:,:)=wmean(:,:)+ta1(1,:,:)
 
 
     !! Second-order velocity moments
     !!uumean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*ux1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    uumean(:,:)=uumean(:,:)+ta1(1,:,:)
-    !!vvmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)*uy1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    vvmean(:,:)=vvmean(:,:)+ta1(1,:,:)
-    !!wwmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)*uz1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    wwmean(:,:)=wwmean(:,:)+ta1(1,:,:)
-    !!uvmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*uy1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    uvmean(:,:)=uvmean(:,:)+ta1(1,:,:)
-    !!uwmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*uz1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    uwmean(:,:)=uwmean(:,:)+ta1(1,:,:)
-    !!vwmean
-    if (iibm==2) then
-       ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)*uz1(:,:,:)
-    endif
-    call axial_averaging(ta1)
-    vwmean(:,:)=vwmean(:,:)+ta1(1,:,:)
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*ux1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  uumean(:,:)=uumean(:,:)+ta1(1,:,:)
+  !  !!vvmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)*uy1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  vvmean(:,:)=vvmean(:,:)+ta1(1,:,:)
+  !  !!wwmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * uz1(:,:,:)*uz1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  wwmean(:,:)=wwmean(:,:)+ta1(1,:,:)
+  !  !!uvmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*uy1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  uvmean(:,:)=uvmean(:,:)+ta1(1,:,:)
+  !  !!uwmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*uz1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  uwmean(:,:)=uwmean(:,:)+ta1(1,:,:)
+  !  !!vwmean
+  !  if (iibm==2) then
+  !     ta1(:,:,:) = (one - ep1(:,:,:)) * uy1(:,:,:)*uz1(:,:,:)
+  !  endif
+  !  call axial_averaging(ta1)
+  !  vwmean(:,:)=vwmean(:,:)+ta1(1,:,:)
 
-    if (iscalar.ne.0) then
-        do is=1, numscalar
-            !phimean=phi1
-            if (iibm==2) then
-               ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)
-            else
-               ta1(:,:,:) = phi1(:,:,:,is)
-            endif
-            call axial_averaging(ta1)
-            phimean(:,:,is)=phimean(:,:,is)+ta1(1,:,:)
+  !  if (iscalar.ne.0) then
+  !      do is=1, numscalar
+  !          !phimean=phi1
+  !          if (iibm==2) then
+  !             ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)
+  !          else
+  !             ta1(:,:,:) = phi1(:,:,:,is)
+  !          endif
+  !          call axial_averaging(ta1)
+  !          phimean(:,:,is)=phimean(:,:,is)+ta1(1,:,:)
 
-            !phiphimean=phi1*phi1
-            if (iibm==2) then
-               ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)*phi1(:,:,:,is)
-            else
-               ta1(:,:,:) = phi1(:,:,:,is)*phi1(:,:,:,is)
-            endif
-            call axial_averaging(ta1)
-            phiphimean(:,:,is)=phiphimean(:,:,is)+ta1(1,:,:)
+  !          !phiphimean=phi1*phi1
+  !          if (iibm==2) then
+  !             ta1(:,:,:) = (one - ep1(:,:,:)) * phi1(:,:,:,is)*phi1(:,:,:,is)
+  !          else
+  !             ta1(:,:,:) = phi1(:,:,:,is)*phi1(:,:,:,is)
+  !          endif
+  !          call axial_averaging(ta1)
+  !          phiphimean(:,:,is)=phiphimean(:,:,is)+ta1(1,:,:)
 
-            !uphimean=ux1*phi1
-            if (iibm==2) then
-               ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*phi1(:,:,:,is)
-            else
-               ta1(:,:,:) = ux1(:,:,:)*phi1(:,:,:,is)
-            endif
-            call axial_averaging(ta1)
-            uphimean(:,:,is)=uphimean(:,:,is)+ta1(1,:,:)
-        enddo
-    endif
+  !          !uphimean=ux1*phi1
+  !          if (iibm==2) then
+  !             ta1(:,:,:) = (one - ep1(:,:,:)) * ux1(:,:,:)*phi1(:,:,:,is)
+  !          else
+  !             ta1(:,:,:) = ux1(:,:,:)*phi1(:,:,:,is)
+  !          endif
+  !          call axial_averaging(ta1)
+  !          uphimean(:,:,is)=uphimean(:,:,is)+ta1(1,:,:)
+  !      enddo
+  !  endif
 
-    if (mod(itime,icheckpoint)==0) then
+  !  if (mod(itime,icheckpoint)==0) then
 
-        if (nrank==0) then
-           print*,'===========================================================<<<<<'
-           print *,'Writing stat file',itime
-        endif
+  !      if (nrank==0) then
+  !         print*,'===========================================================<<<<<'
+  !         print *,'Writing stat file',itime
+  !      endif
 
-        write(filename,"('pmean.dat',I7.7)") itime
-        ta1(1,:,:)=pmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('umean.dat',I7.7)") itime
-        ta1(1,:,:)=umean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('vmean.dat',I7.7)") itime
-        ta1(1,:,:)=vmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('wmean.dat',I7.7)") itime
-        ta1(1,:,:)=wmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('pmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=pmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('umean.dat',I7.7)") itime
+  !      ta1(1,:,:)=umean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('vmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=vmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('wmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=wmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
 
-        write(filename,"('uumean.dat',I7.7)") itime
-        ta1(1,:,:)=uumean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('vvmean.dat',I7.7)") itime
-        ta1(1,:,:)=vvmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('wwmean.dat',I7.7)") itime
-        ta1(1,:,:)=wwmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('uvmean.dat',I7.7)") itime
-        ta1(1,:,:)=uvmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('uwmean.dat',I7.7)") itime
-        ta1(1,:,:)=uwmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
-        write(filename,"('vwmean.dat',I7.7)") itime
-        ta1(1,:,:)=vwmean(:,:)
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('uumean.dat',I7.7)") itime
+  !     ta1(1,:,:)=uumean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('vvmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=vvmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('wwmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=wwmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('uvmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=uvmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('uwmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=uwmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('vwmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=vwmean(:,:)
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
 
-        write(filename,"('kmean.dat',I7.7)") itime
-        ta1(1,:,:)=half*(uumean(:,:)+vvmean(:,:)+wwmean(:,:))
-        call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !      write(filename,"('kmean.dat',I7.7)") itime
+  !      ta1(1,:,:)=half*(uumean(:,:)+vvmean(:,:)+wwmean(:,:))
+  !      call decomp_2d_write_plane(1,ta1,1,1,filename)
 
-        if (iscalar==1) then
-            do is=1, numscalar
-                write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
-                ta1(1,:,:)=phimean(:,:,is)
-                call decomp_2d_write_plane(1,ta1,1,1,filename)
-                write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
-                ta1(1,:,:)=phiphimean(:,:,is)
-                call decomp_2d_write_plane(1,ta1,1,1,filename)
-                write(filename,"('uphi',I2.2,'mean.dat',I7.7)") is, itime
-                ta1(1,:,:)=uphimean(:,:,is)
-                call decomp_2d_write_plane(1,ta1,1,1,filename)
-           enddo
-        endif
+  !      if (iscalar==1) then
+  !          do is=1, numscalar
+  !              write(filename,"('phi',I2.2,'mean.dat',I7.7)") is, itime
+  !              ta1(1,:,:)=phimean(:,:,is)
+  !              call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !              write(filename,"('phiphi',I2.2,'mean.dat',I7.7)") is, itime
+  !              ta1(1,:,:)=phiphimean(:,:,is)
+  !              call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !              write(filename,"('uphi',I2.2,'mean.dat',I7.7)") is, itime
+  !              ta1(1,:,:)=uphimean(:,:,is)
+  !              call decomp_2d_write_plane(1,ta1,1,1,filename)
+  !         enddo
+  !      endif
         !if (nrank==0) then !! Cleanup old files
         !    if ((itime - icheckpoint).ge.initstat) then
         !        write(filename,"('uphi',I2.2,'mean.dat',I7.7)") is, itime-icheckpoint
@@ -609,10 +609,10 @@ contains
         !    endif
         !endif
 
-    endif
+ !   endif
 
-    return
-  end SUBROUTINE postprocess_rough
+!    return
+!  end SUBROUTINE postprocess_rough
 !  ####################################################################################################
 !  ####################################################################################################
   subroutine visu_rough_init(visu_initialised)
