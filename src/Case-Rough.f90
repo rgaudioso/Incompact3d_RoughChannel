@@ -196,7 +196,7 @@ contains
              if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
              if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
              !um=exp(-zptwo*y*y)
-             um=exp(-ten*y*y)
+             um=exp(-two*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
