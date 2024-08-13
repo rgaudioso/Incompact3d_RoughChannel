@@ -171,7 +171,7 @@ contains
 
     use decomp_2d_io, only : decomp_2d_start_io
 
-    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart
+    use param, only : nrhotime, ilmn, iscalar, ioutput, irestart, iibm
 
     use variables, only : sx, cifip6, cisip6, ciwip6, cifx6, cisx6, ciwx6
     use variables, only : sy, cifip6y, cisip6y, ciwip6y, cify6, cisy6, ciwy6
