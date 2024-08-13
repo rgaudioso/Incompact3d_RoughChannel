@@ -106,7 +106,7 @@ contains
                if (istret/=0) y=yp(j+xstart(2)-1)
                do i=1,xsize(1)
                   if (ep1(i,j,k).eq.0) then
-                     phi1(i,j,k,:) = zero                 
+                     phi1(i,j,k,:) = one                 
                   else
                      phi1(i,j,k,:) = zero
                   endif
@@ -115,13 +115,13 @@ contains
          enddo
        enddo
        !phi1(:,:,:,:) = zero !change as much as you want
-       if ((nclyS1 == 2).and.(xstart(2) == 1)) then
+       !if ((nclyS1 == 2).and.(xstart(2) == 1)) then
        !  !! Generate a hot patch on bottom boundary
           phi1(:,1,:,:) = zero !one
-       endif
-       if ((nclySn == 2).and.(xend(2) == ny)) then
+       !endif
+       !if ((nclySn == 2).and.(xend(2) == ny)) then
           phi1(:,xsize(2),:,:) = zero
-       endif
+       !endif
     endif  
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !++++++++++++++++++++++++++++++++++++INIT FLOW VEL++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -200,7 +200,7 @@ contains
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
-                      if (y.lt.(yly/2+0.5*yly/2).or.y.ge.(yly/2-0.5*yly/2)) then
+                      if (y.lt.(yly-4*offset).or.y.ge.(4*offset)) then
                          !Poiseuille flow (nondim) => u(y) = 1 - y*y
                          ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
                          uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
