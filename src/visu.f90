@@ -254,7 +254,8 @@ contains
     call rescale_pressure(ta1)
 
     ! Write pressure
-    call write_field(ta1, ".", "pp", num, .true., flush=.true.)
+    !call write_field(ta1, ".", "pp", num, .true., flush=.true.)
+    call write_field(ta1, ".", "pp", num, .false., flush=.true.)
 
     ! LMN - write density
     if (ilmn) call write_field(rho1(:,:,:,1), ".", "rho", num)
@@ -263,9 +264,13 @@ contains
     if (iscalar.ne.0) then
       do is = 1, numscalar
         write(scname,"('phi',I2.2)") is
-        call write_field(phi1(:,:,:,is), ".", trim(scname), num, .true.)
+        !call write_field(phi1(:,:,:,is), ".", trim(scname), num, .true.)
+        call write_field(phi1(:,:,:,is), ".", trim(scname), num, .false.)
       enddo
     endif
+
+   ! Write epsi
+   if (iibm==2) call write_field(ep1,".","epsi",num,.true.)
 
   end subroutine write_snapshot
 
