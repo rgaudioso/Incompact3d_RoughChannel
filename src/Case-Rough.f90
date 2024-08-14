@@ -223,20 +223,20 @@ contains
              enddo
           enddo
        enddo
-       !!$=====DEBUG test in SERIAL
-       if (nrank==0) then 
-         ! Write the initial ux to file
-         open(unit=98, file='ux_init.dat', status='unknown')
-         do j=1,xsize(2)   
-            write(98, *) ux1(1,j,1)
-         enddo
-         close(98)
-       endif
-       !!===========
+
     elseif (iin == 4) then ! SEM
        call sem_init_rough(ux1, uy1, uz1)
     endif
     
+    !!$=====DEBUG test in SERIAL
+    if (nrank==0) then 
+       ! Write the initial ux to file
+       open(unit=98, file='ux_init.dat', status='unknown')
+       do j=1,xsize(2)   
+          write(98, *) ux1(1,j,1)
+       enddo
+       close(98)
+    endif
    !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !INIT FOR G AND U=MEAN FLOW + NOISE 
     do k=1,xsize(3)
