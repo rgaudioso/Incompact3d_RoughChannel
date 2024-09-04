@@ -117,10 +117,10 @@ contains
        !phi1(:,:,:,:) = zero !change as much as you want
        !if ((nclyS1 == 2).and.(xstart(2) == 1)) then
        !  !! Generate a hot patch on bottom boundary
-          phi1(:,1,:,:) = zero !one
+       !   phi1(:,1,:,:) = zero !one
        !endif
        !if ((nclySn == 2).and.(xend(2) == ny)) then
-          phi1(:,xsize(2),:,:) = zero
+       !   phi1(:,xsize(2),:,:) = zero
        !endif
     endif  
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -196,7 +196,7 @@ contains
              if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
              if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
              !um=exp(-zptwo*y*y)
-             um=exp(-two*y*y)
+             um=exp(-ten*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
