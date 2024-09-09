@@ -178,7 +178,10 @@ contains
              enddo
           enddo
        enddo
-    elseif (iin==3) then ! Init to turbulent flows using random numbers (ONLY CENTERLINE) + lam profile
+    elseif (iin == 4) then ! SEM
+       call sem_init_rough(ux1, uy1, uz1)
+  
+    elseif (iin==5) then ! Init to turbulent flows using random numbers (ONLY CENTERLINE) + lam profile
        if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
            write(*,*) 'Imposing uniform vel. profile with modulated noise' !'Imposing Poiseuille vel. profile with centerline noise'
        end if
@@ -223,11 +226,7 @@ contains
              enddo
           enddo
        enddo
-
-    elseif (iin == 4) then ! SEM
-       call sem_init_rough(ux1, uy1, uz1)
-    endif
-    
+    endif 
     !!$=====DEBUG test in SERIAL
     if (nrank==0) then 
        ! Write the initial ux to file
