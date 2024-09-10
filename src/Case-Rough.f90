@@ -203,16 +203,17 @@ contains
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
-                      if (y.lt.(yly-4*offset).or.y.ge.(4*offset)) then
+                      !if (y.lt.(yly-4*offset).or.y.ge.(4*offset)) then
                          !Poiseuille flow (nondim) => u(y) = 1 - y*y
-                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-(y/(yly/2))**2
-                         uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                         uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-                      else !Avoid noise close to walls
-                         ux1(i,j,k)=one-(y/(yly/2))**2
+                      !   ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                      !   uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                      !   uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                      !else !Avoid noise close to walls
+                         !ux1(i,j,k)=one-(y/(yly/2))**2
+			 ux1(i,j,k)=one
                          uy1(i,j,k)=zero
                          uz1(i,j,k)=zero
-                      endif
+                      !endif
                    else !Inside the rough walls
                       ux1(i,j,k)=zero
                       uy1(i,j,k)=zero
