@@ -515,9 +515,9 @@ contains
 
        call momentum_forcing_channel(dux1, duy1, duz1, ux1, uy1, uz1)
    
-    elseif (itype.eq.itype_rough) then
+    !elseif (itype.eq.itype_rough) then
 
-       call momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1)
+    !   call momentum_forcing_rough(dux1, duy1, duz1, ux1, uy1, uz1)
    
     elseif (itype.eq.itype_abl) then
 
