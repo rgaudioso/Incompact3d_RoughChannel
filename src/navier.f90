@@ -1549,11 +1549,6 @@ contains
        call rough_volume_avg(ta1,ncount,ep,one)
     endif
 
-    !!$=========DEBUG
-    if (nrank==0) then
-       if (mod(itime, ilist)==0) print *,'    Number of fluid cells', ncount
-    endif
-
     !Bulk velocity correction
     call rough_bulk_u(ux,uy,uz,ep,one,ncount)
 
