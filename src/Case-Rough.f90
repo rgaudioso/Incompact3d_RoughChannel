@@ -212,7 +212,7 @@ contains
                          ux1(i,j,k)=one-y*y
                          uy1(i,j,k)=zero
                          uz1(i,j,k)=zero
-                      !endif
+                      endif
                    else !Inside the rough walls
                       ux1(i,j,k)=zero
                       uy1(i,j,k)=zero
