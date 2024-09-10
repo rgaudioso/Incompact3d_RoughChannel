@@ -186,7 +186,7 @@ contains
            write(*,*) 'Imposing uniform vel. profile with modulated noise' !'Imposing Poiseuille vel. profile with centerline noise'
        end if
        call system_clock(count=code)
-       if (iin.eq.3) code=0
+       if (iin.eq.5) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
 
@@ -203,14 +203,13 @@ contains
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
-                      !if (y.lt.(yly-4*offset).or.y.ge.(4*offset)) then
+                      if (y.lt.(yly-4*offset).or.y.ge.(4*offset)) then
                          !Poiseuille flow (nondim) => u(y) = 1 - y*y
-                      !   ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-                      !   uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                      !   uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-                      !else !Avoid noise close to walls
-                         !ux1(i,j,k)=one-(y/(yly/2))**2
-			 ux1(i,j,k)=one
+                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
+                         uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                         uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                      else !Avoid noise close to walls
+                         ux1(i,j,k)=one-y*y
                          uy1(i,j,k)=zero
                          uz1(i,j,k)=zero
                       !endif
