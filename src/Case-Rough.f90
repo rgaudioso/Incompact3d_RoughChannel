@@ -115,13 +115,13 @@ contains
          enddo
        enddo
        !phi1(:,:,:,:) = zero !change as much as you want
-       !if ((nclyS1 == 2).and.(xstart(2) == 1)) then
-       !  !! Generate a hot patch on bottom boundary
-       !   phi1(:,1,:,:) = zero !one
-       !endif
-       !if ((nclySn == 2).and.(xend(2) == ny)) then
-       !   phi1(:,xsize(2),:,:) = zero
-       !endif
+       if ((nclyS1 == 2).and.(xstart(2) == 1)) then
+         !! Generate a hot patch on bottom boundary
+          phi1(:,1,:,:) = zero !one
+       endif
+       if ((nclySn == 2).and.(xend(2) == ny)) then
+          phi1(:,xsize(2),:,:) = zero
+       endif
     endif  
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !++++++++++++++++++++++++++++++++++++INIT FLOW VEL++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -198,8 +198,8 @@ contains
           do j=1,xsize(2)
              if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
              if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
-             !um=exp(-zptwo*y*y)
-             um=exp(-ten*y*y)
+             um=exp(-zptwo*y*y)
+             !um=exp(-ten*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
                    if (ep1(i,j,k).eq.0) then
@@ -228,14 +228,14 @@ contains
        enddo
     endif 
     !!$=====DEBUG test in SERIAL
-    if (nrank==0) then 
+    !if (nrank==0) then 
        ! Write the initial ux to file
-       open(unit=98, file='ux_init.dat', status='unknown')
-       do j=1,xsize(2)   
-          write(98, *) ux1(1,j,1)
-       enddo
-       close(98)
-    endif
+    !   open(unit=98, file='ux_init.dat', status='unknown')
+    !   do j=1,xsize(2)   
+    !      write(98, *) ux1(1,j,1)
+    !   enddo
+    !   close(98)
+   ! endif
    !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     !INIT FOR G AND U=MEAN FLOW + NOISE 
     do k=1,xsize(3)
@@ -278,7 +278,7 @@ contains
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi
 
-    if (.not. cpg ) then ! if not constant pressure gradient
+    if (.not.cpg.and.iibm.eq.0 ) then ! if not constant pressure gradient
        if (idir_stream == 1) then
           call rough_cfr(ux,two/three)
        else
