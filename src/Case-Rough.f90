@@ -94,13 +94,28 @@ contains
           do j=1,xsize(2)
              if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
              if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
-             um=exp(-zptwo*y*y)
+             um=exp(-zptwo*ym*ym)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
-                   ux1(i,j,k)=one-y*y
-                   uy1(i,j,k)=zero
-                   uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
-                else
+		   if (iibm.ne.0) then
+                      if (ep1(i,j,k).eq.0) then ! Fluid region
+		         ! (y.lt.(yly-4*offset).or.y.ge.(4*offset)) ! FOR: Only centerline noise
+                         !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
+                         ux1(i,j,k)=one-(ym/(yly*half))**two
+                         uy1(i,j,k)=zero
+                         uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
+                     else 
+		         !Inside the rough walls
+                         ux1(i,j,k)=zero
+                         uy1(i,j,k)=zero
+                         uz1(i,j,k)=zero
+		     endif
+                  else
+                      ux1(i,j,k)=one-(ym/(yly*half))**two
+                      uy1(i,j,k)=zero
+                      uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
+                  endif
+		else
 		   if (nrank == 0) then
                        write(*,*) 'ERROR: idir_stream supported only streamwise'
 		       call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
