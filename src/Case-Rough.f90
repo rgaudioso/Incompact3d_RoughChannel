@@ -30,16 +30,14 @@ contains
     use param
     use ibm_param, only : offset
     use MPI
-    use mhd, only : mhd_active, Bm,Bmean
 
     implicit none
 
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux1,uy1,uz1,ep1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3),numscalar) :: phi1
-
-    real(mytype) :: y,r,um,r3,x,z,h,ct
-    real(mytype) :: cx0,cy0,cz0,hg,lg
-    real(mytype) :: ftent
+  
+    real(mytype)                    :: um,ym
+    real(mytype)                    :: nu
     integer :: k,j,i,fh,ierror,ii,is,it,code, jj
 
     if (idir_stream /= 1 .and. idir_stream /= 3) then
@@ -55,73 +53,34 @@ contains
         call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
     endif
     !+++++++++++++++++++++++++++++++++ INSERIRE QUI MBC INIT PHI++++++++++++++++++++++++++++++++++++++++++++++
-    if (iscalar==1) then
-       !if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-       !   write(*,*) 'Imposing linear temperature profile'
-       !endif
-       !do is=1,numscalar
-       !  do k=1,xsize(3)
-       !     do j=1,xsize(2)
-       !        if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-       !        if (istret/=0) y=yp(j+xstart(2)-1)
-       !        do i=1,xsize(1)
-       !           if (y.le.(yly/two).and.ep1(i,j,k).eq.0) then
-       !              phi1(i,j,k,:) = one + y/yly
-       !           elseif (y.gt.(yly/two).and.ep1(i,j,k).eq.0) then
-       !              phi1(i,j,k,:) = one - y/yly                  
-       !           else
-       !              phi1(i,j,k,:) = zero
-       !           endif
-       !        enddo
-       !     enddo
-       !  enddo
-       !enddo
-
-       !if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-       !   write(*,*) 'Imposing quadratic (Poiseuille-like) temperature profile'
-       !endif
-       !do is=1,numscalar
-       !  do k=1,xsize(3)
-       !     do j=1,xsize(2)
-       !        if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-       !        if (istret/=0) y=yp(j+xstart(2)-1)
-       !        do i=1,xsize(1)
-       !           if (ep1(i,j,k).eq.0) then
-       !              phi1(i,j,k,:) = one - y*y               
-       !           else
-       !              phi1(i,j,k,:) = zero
-       !           endif
-       !        enddo
-       !     enddo
-       !  enddo
-       !enddo
-     
+    if (iscalar.ne.0) then
+       !Analytical laminar temperature profile, with nu=4.36
+       nu=real(48./11.,8)
        if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-          write(*,*) 'Imposing uniform temperature profile'
+          write(*,*) 'Imposing analytical laminar  temperature profile'
        endif
        do is=1,numscalar
          do k=1,xsize(3)
             do j=1,xsize(2)
-               if (istret==0) y=real(j+xstart(2)-2,mytype)*dy
-               if (istret/=0) y=yp(j+xstart(2)-1)
+             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
                do i=1,xsize(1)
                   if (ep1(i,j,k).eq.0) then
-                     phi1(i,j,k,:) = one                 
+                     phi1(i,j,k,is) = two*nu*(three/sixteen + ym**four - ym**two)                 
                   else
-                     phi1(i,j,k,:) = zero
+                     phi1(i,j,k,is) = zero
                   endif
                enddo
             enddo
          enddo
        enddo
-       !phi1(:,:,:,:) = zero !change as much as you want
-       if ((nclyS1 == 2).and.(xstart(2) == 1)) then
+       !if ((nclyS1 == 2).and.(xstart(2) == 1)) then
          !! Generate a hot patch on bottom boundary
-          phi1(:,1,:,:) = zero !one
-       endif
-       if ((nclySn == 2).and.(xend(2) == ny)) then
-          phi1(:,xsize(2),:,:) = zero
-       endif
+       !   phi1(:,1,:,:) = zero !one
+       !endif
+       !if ((nclySn == 2).and.(xend(2) == ny)) then
+       !   phi1(:,xsize(2),:,:) = zero
+       !endif
     endif  
    !+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
    !++++++++++++++++++++++++++++++++++++INIT FLOW VEL++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -133,8 +92,8 @@ contains
     if (iin == 0) then ! laminar flow
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
-             if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
+             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
              um=exp(-zptwo*y*y)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
@@ -142,10 +101,10 @@ contains
                    uy1(i,j,k)=zero
                    uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
                 else
-                        print *,'test'
-                   uz1(i,j,k)=one-y*y
-                   uy1(i,j,k)=zero
-                   ux1(i,j,k)=zero
+		   if (nrank == 0) then
+                       write(*,*) 'ERROR: idir_stream supported only streamwise'
+		       call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+		   endif
                 endif
              enddo
           enddo
@@ -155,77 +114,47 @@ contains
        if (iin.eq.2) code=0
        call random_seed(size = ii)
        call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
-
        call random_number(ux1)
        call random_number(uy1)
        call random_number(uz1)
        !modulation of the random noise + initial velocity profile
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
-             if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
-             um=exp(-zptwo*y*y)
+             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             um=exp(-fifteen*ym*ym)
              do i=1,xsize(1)
-                if (idir_stream == 1) then
-                   ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-                   uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                   uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                if (idir_stream == 1) then		   
+                   if (iibm.ne.0) then
+                      if (ep1(i,j,k).eq.0) then ! Fluid region
+		         ! (y.lt.(yly-4*offset).or.y.ge.(4*offset)) ! FOR: Only centerline noise
+                         !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
+                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(one-(ym/(yly*half))**two)
+                         uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                         uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                     else 
+		         !Inside the rough walls
+                         ux1(i,j,k)=zero
+                         uy1(i,j,k)=zero
+                         uz1(i,j,k)=zero
+		     endif
+                   else
+		      !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
+                      ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(one-(ym/(yly*half))**two)
+                      uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
+                      uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one) 
+                   endif
                 else
-                   uz1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-                   uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                   ux1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
+                   if (nrank == 0) then
+                       write(*,*) 'ERROR: idir_stream supported only streamwise'
+		       call MPI_ABORT(MPI_COMM_WORLD,code,ierror); stop
+		   endif
                 endif
              enddo
           enddo
        enddo
     elseif (iin == 4) then ! SEM
        call sem_init_rough(ux1, uy1, uz1)
-  
-    elseif (iin==5) then ! Init to turbulent flows using random numbers (ONLY CENTERLINE) + lam profile
-       if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
-           write(*,*) 'Imposing uniform vel. profile with modulated noise' !'Imposing Poiseuille vel. profile with centerline noise'
-       end if
-       call system_clock(count=code)
-       if (iin.eq.5) code=0
-       call random_seed(size = ii)
-       call random_seed(put = code+63946*(nrank+1)*(/ (i - 1, i = 1, ii) /))
-
-       call random_number(ux1)
-       call random_number(uy1)
-       call random_number(uz1)
-       !modulation of the random noise + initial velocity profile
-       do k=1,xsize(3)
-          do j=1,xsize(2)
-             if (istret==0) y=real(j+xstart(2)-1-1,mytype)*dy-yly*half
-             if (istret/=0) y=yp(j+xstart(2)-1)-yly*half
-             um=exp(-zptwo*y*y)
-             !um=exp(-ten*y*y)
-             do i=1,xsize(1)
-                if (idir_stream == 1) then
-                   if (ep1(i,j,k).eq.0) then
-                      if (y.lt.(yly-4*offset).or.y.ge.(4*offset)) then
-                         !Poiseuille flow (nondim) => u(y) = 1 - y*y
-                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-                         uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                         uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-                      else !Avoid noise close to walls
-                         ux1(i,j,k)=one-y*y
-                         uy1(i,j,k)=zero
-                         uz1(i,j,k)=zero
-                      endif
-                   else !Inside the rough walls
-                      ux1(i,j,k)=zero
-                      uy1(i,j,k)=zero
-                      uz1(i,j,k)=zero
-                   endif
-                else !Not interesting for rough channel IBM
-                   uz1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+one-y*y
-                   uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
-                   ux1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
-                endif
-             enddo
-          enddo
-       enddo
     endif 
     !!$=====DEBUG test in SERIAL
     !if (nrank==0) then 
@@ -237,31 +166,6 @@ contains
     !   close(98)
    ! endif
    !++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-    !INIT FOR G AND U=MEAN FLOW + NOISE 
-    do k=1,xsize(3)
-       do j=1,xsize(2)
-          do i=1,xsize(1)
-             ux1(i,j,k)=ux1(i,j,k)+bxx1(j,k)
-             uy1(i,j,k)=uy1(i,j,k)+bxy1(j,k)
-             uz1(i,j,k)=uz1(i,j,k)+bxz1(j,k)
-          enddo
-       enddo
-    enddo
-
-    if(mhd_active) then
-
-      Bmean(:,:,:,1)=zero
-      Bmean(:,:,:,2)=one
-      Bmean(:,:,:,3)=zero
-
-      Bm(:,:,:,1)=zero
-      Bm(:,:,:,2)=zero
-      Bm(:,:,:,3)=zero
-      
-      if(nrank==0) print*,'** magnetic field initialised'
-
-    endif
-
     return
   end subroutine init_rough
   !############################################################################
@@ -548,16 +452,16 @@ contains
     real(mytype),dimension(nxx)                     :: xxp
     real(mytype),dimension(nyy)                     :: yyp
     real(mytype),dimension(nzz)                     :: zzp
-    real(mytype)                                    :: remp
+    real(mytype)                                    :: remp, tol
     real(mytype)                                    :: r,ym,zm,xm
     !LOCALS
     integer                                         :: i,j,k,irank,code,is
     integer                                         :: iprint
     !real(mytype),dimension(nz,nx,2) :: rmat  !here the dimension 2 contains BOTH walls. So you need to provide both roughness matrices    
     real(mytype)                                    :: hraf
-
+     
     epsi(:,:,:) = zero
-    
+    tol = 1e-15
     ! #Rough map file readin --------------------------------------
     ! Use these dimensions when the map matches the grid resolution
     !nrows = nz
@@ -596,8 +500,12 @@ contains
                 
                     if (ym.lt.yly/two.and.ym.lt.hraf) then
                        epsi(i,j,k) = remp
+	            elseif (ym.lt.yly/two.and.abs(ym-hraf).lt.tol) then
+	               epsi(i,j,k) = remp
                     elseif (ym.gt.yly/two.and.ym.gt.(yly-hraf)) then
                        epsi(i,j,k) = remp
+		    elseif (ym.gt.yly/two.and.abs(ym-(yly-hraf)).lt.tol) then
+	               epsi(i,j,k) = remp
                     endif
                   
                 !endif
