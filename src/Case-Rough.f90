@@ -66,7 +66,8 @@ contains
              if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
                do i=1,xsize(1)
                   if (ep1(i,j,k).eq.0) then
-                     phi1(i,j,k,is) = two*nu*(three/sixteen + ym**four - ym**two)                 
+                     !phi1(i,j,k,is) = two*nu*(three/sixteen + ym**four - ym**two)  
+		     phi1(i,j,k,is) = one-(ym/(yly*half))**two
                   else
                      phi1(i,j,k,is) = zero
                   endif
