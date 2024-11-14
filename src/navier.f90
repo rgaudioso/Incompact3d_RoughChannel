@@ -1723,21 +1723,28 @@ contains
     !LOCALS
     real(mytype)                                        :: ym,yc,zm,zc
     integer                                             :: i,j,k,code
+    real(mytype)                                        :: wcoeff, wsum
 
     !Compute volumetric average of var
     !in the inner fluid zone ep=0
     qm=zero
+    wsum = zero
     do k=1,xsize(3)
         do j=1,xsize(2)
             do i=1,xsize(1)
                 if (ep(i,j,k).eq.0) then
-                    qm=qm+var(i,j,k)
+                  if (istret.eq.0) wcoeff = one
+                  if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
+                    wsum = wsum + wcoeff
+                    qm= qm + wcoeff*var(i,j,k)
                 endif
             enddo
         enddo
     enddo
     call MPI_ALLREDUCE(MPI_IN_PLACE,qm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    qm=qm/ncount
+    call MPI_ALLREDUCE(MPI_IN_PLACE,wsum,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    if (istret.eq.0) qm = qm/ncount
+    if (istret.ne.0) qm = qm/wsum
     !
     return
 
