@@ -1583,6 +1583,7 @@ contains
     real(mytype)                                                        :: ym,zm,yc,zc
     integer                                                             :: j,i,k
     integer, save                                                       :: local_io_unit=-1
+    real(mytype)                                                        :: wcoeff
 
     yc = yly/two
     zc = zlz/two
