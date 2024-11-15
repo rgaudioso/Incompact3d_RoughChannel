@@ -1606,8 +1606,10 @@ contains
         do j=1,xsize(2)
             do i=1,xsize(1)
                 if (ep(i,j,k).eq.0) then
-                    !ux(i,j,k)=ux(i,j,k)+(ub_constant-qm)
-                    ux(i,j,k)=ux(i,j,k)*(ub_constant/qm)
+                    if (istret.eq.0) wcoeff = one
+                    if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
+                    ux(i,j,k)=ux(i,j,k)+wcoeff*(ub_constant-qm) !weighted additive correction
+                    !ux(i,j,k)=ux(i,j,k)*(ub_constant/qm) !multiplicative correction
                 else
                     !Cancel solid zone (ep=1)
                     ux(i,j,k)=zero
