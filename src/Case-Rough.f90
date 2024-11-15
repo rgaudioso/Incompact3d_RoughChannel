@@ -62,8 +62,10 @@ contains
        do is=1,numscalar
          do k=1,xsize(3)
             do j=1,xsize(2)
-             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
-             if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             !if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             !if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-(yly-offset)*half ! Consider here wall offset (mean roughness level)
+             if (istret/=0) ym=yp(j+xstart(2)-1)-(yly-offset)*half
                do i=1,xsize(1)
                   if (ep1(i,j,k).eq.0) then
                      !phi1(i,j,k,is) = two*nu*(three/sixteen + ym**four - ym**two)  
@@ -93,14 +95,15 @@ contains
     if (iin == 0) then ! laminar flow
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
-             if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             !if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             !if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-(yly-offset)*half ! Consider here wall offset (mean roughness level)
+             if (istret/=0) ym=yp(j+xstart(2)-1)-(yly-offset)*half
              um=exp(-zptwo*ym*ym)
              do i=1,xsize(1)
                 if (idir_stream == 1) then
 		   if (iibm.ne.0) then
                       if (ep1(i,j,k).eq.0) then ! Fluid region
-		         ! (y.lt.(yly-4*offset).or.y.ge.(4*offset)) ! FOR: Only centerline noise
                          !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
                          ux1(i,j,k)=(three/two)*(one-ym**two)
                          uy1(i,j,k)=zero
@@ -136,8 +139,10 @@ contains
        !modulation of the random noise + initial velocity profile
        do k=1,xsize(3)
           do j=1,xsize(2)
-             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
-             if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             !if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-yly*half
+             !if (istret/=0) ym=yp(j+xstart(2)-1)-yly*half
+             if (istret==0) ym=real(j+xstart(2)-1-1,mytype)*dy-(yly-offset)*half ! Consider here wall offset (mean roughness level)
+             if (istret/=0) ym=yp(j+xstart(2)-1)-(yly-offset)*half
              um=exp(-fifteen*ym*ym)
              do i=1,xsize(1)
                 if (idir_stream == 1) then		   
