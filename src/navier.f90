@@ -1598,6 +1598,7 @@ contains
        if (mod(itime, ilist)==0) print *,'Velocity:'
        if (mod(itime, ilist)==0) print *,'    Bulk velocity before',qm
        write(local_io_unit,*) real((itime-1)*dt,mytype), (ub_constant-qm) !write pressure drop
+       write(local_io_unit,*) real((itime-1)*dt,mytype), (ub_constant/qm) !write ratio
     endif
 
     !Correction
@@ -1605,7 +1606,8 @@ contains
         do j=1,xsize(2)
             do i=1,xsize(1)
                 if (ep(i,j,k).eq.0) then
-                    ux(i,j,k)=ux(i,j,k)+(ub_constant-qm)
+                    !ux(i,j,k)=ux(i,j,k)+(ub_constant-qm)
+                    ux(i,j,k)=ux(i,j,k)*(ub_constant/qm)
                 else
                     !Cancel solid zone (ep=1)
                     ux(i,j,k)=zero
