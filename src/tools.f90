@@ -93,6 +93,7 @@ contains
     real(mytype) :: uxmax1,uymax1,uzmax1,uxmin1,uymin1,uzmin1
     real(mytype),dimension(xsize(1),xsize(2),xsize(3)) :: ux,uy,uz
     real(mytype),dimension(6) :: umaxin, umaxout
+    integer, save             :: local_io_unit=-1
 
     if (iibm > 0) then
        ux(:,:,:) = (one - ep1(:,:,:)) * ux(:,:,:)
