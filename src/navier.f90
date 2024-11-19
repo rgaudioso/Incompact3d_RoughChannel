@@ -1534,7 +1534,7 @@ contains
   !
   !********************************************************************
 
-    use param, only: one
+    use param, only: one, two, three
     use variables, only: numscalar
     use var, only: ta1, phi1
 
@@ -1700,7 +1700,7 @@ contains
 
     !Check new bulk temperature
     if (mod(itime, ilist)==0) then
-        call rough_volume_avg(ux*phi,qm,ep,ncount)
+        call rough_volume_avg(ux*phi,qm,ep)
         if (nrank==0) print *,'          Bulk phi after',qm
     endif
     !
@@ -1725,7 +1725,7 @@ contains
     !real(mytype),intent(in)                             :: ncount
     !LOCALS
     real(mytype)                                        :: ym,yc,zm,zc
-    integer                                             :: i,j,k,code
+    integer                                             :: i,j,k,code,jloc
     real(mytype)                                        :: wcoeff, wsum
 
     !Compute volumetric average of var in the inner fluid zone ep=0
