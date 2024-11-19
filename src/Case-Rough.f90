@@ -105,7 +105,7 @@ contains
 		   if (iibm.ne.0) then
                       if (ep1(i,j,k).eq.0) then ! Fluid region
                          !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
-                         ux1(i,j,k)=(three/two)*(one-ym**two)
+                         ux1(i,j,k)=one-ym**two
                          uy1(i,j,k)=zero
                          uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
                      else 
@@ -115,7 +115,7 @@ contains
                          uz1(i,j,k)=zero
 		     endif
                   else
-                      ux1(i,j,k)=(three/two)*(one-ym**two)
+                      ux1(i,j,k)=one-ym**two
                       uy1(i,j,k)=zero
                       uz1(i,j,k)=sin(real(i-1,mytype)*dx)+cos(real(k-1,mytype)*dz)
                   endif
@@ -150,7 +150,7 @@ contains
                       if (ep1(i,j,k).eq.0) then ! Fluid region
 		         ! (y.lt.(yly-4*offset).or.y.ge.(4*offset)) ! FOR: Only centerline noise
                          !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
-                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(three/two)*(one-ym**two)
+                         ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(one-ym**two)
                          uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                          uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one)
                      else 
@@ -161,7 +161,7 @@ contains
 		     endif
                    else
 		      !Poiseuille flow (nondim) => u(y) = 1 - y^2/H^2
-                      ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(three/two)*(one-ym**two)
+                      ux1(i,j,k)=init_noise*um*(two*ux1(i,j,k)-one)+(one-ym**two)
                       uy1(i,j,k)=init_noise*um*(two*uy1(i,j,k)-one)
                       uz1(i,j,k)=init_noise*um*(two*uz1(i,j,k)-one) 
                    endif
