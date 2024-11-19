@@ -1540,29 +1540,29 @@ contains
 
     implicit none
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: ux,uy,uz,ep
-    real(mytype),save                                   :: ncount = -one
+    !real(mytype),save                                   :: ncount = -one
     integer                                             :: is
 
     !Compute the number of cells inside the pipe at the beginning
-    if (ncount < 0) then
-       ta1(:,:,:) = one
-       call rough_volume_avg(ta1,ncount,ep,one)
-    endif
+    !if (ncount < 0) then
+    !   ta1(:,:,:) = one
+    !  call rough_volume_avg(ta1,ncount,ep,one)
+    !endif
 
     !Bulk velocity correction
-    call rough_bulk_u(ux,uy,uz,ep,one,ncount)
+    call rough_bulk_u(ux,uy,uz,ep,two/three)
 
     !Bulk temperature correction
     if (numscalar.ne.0) then
         do is=1,numscalar
-            call rough_bulk_phi(phi1(:,:,:,is),ux,ep,is,one,ncount)
+            call rough_bulk_phi(phi1(:,:,:,is),ux,ep,is,one)
         enddo
     endif
 
   end subroutine rough_bulk
   !********************************************************************
   !
-  subroutine rough_bulk_u(ux,uy,uz,ep,ub_constant,ncount)
+  subroutine rough_bulk_u(ux,uy,uz,ep,ub_constant)
   !
   !********************************************************************
 
@@ -1577,7 +1577,7 @@ contains
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))    :: ux,uy,uz
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))    :: ep
     real(mytype),intent(in   )                                          :: ub_constant !bulk velocity value
-    real(mytype),intent(in   )                                          :: ncount !numer of cells inside the pipe
+    !real(mytype),intent(in   )                                          :: ncount !numer of cells inside the pipe
     !LOCALS
     real(mytype)                                                        :: qm      !flow rate
     real(mytype)                                                        :: ym,zm,yc,zc
@@ -1594,12 +1594,11 @@ contains
 
     !--------------------------- Bulk Velocity ---------------------------
     !Calculate loss of streamwise mean pressure gradient
-    call rough_volume_avg(ux,qm,ep,ncount)
+    call rough_volume_avg(ux,qm,ep)
     if (nrank==0) then
        if (mod(itime, ilist)==0) print *,'Velocity:'
        if (mod(itime, ilist)==0) print *,'    Bulk velocity before',qm
        write(local_io_unit,*) real((itime-1)*dt,mytype), (ub_constant-qm) !write pressure drop
-       write(local_io_unit,*) real((itime-1)*dt,mytype), (ub_constant/qm) !write ratio
     endif
 
     !Correction
@@ -1607,10 +1606,10 @@ contains
         do j=1,xsize(2)
             do i=1,xsize(1)
                 if (ep(i,j,k).eq.0) then
-                    if (istret.eq.0) wcoeff = one
-                    if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
-                    !ux(i,j,k)=ux(i,j,k)+(ub_constant-qm) !additive correction
-                    ux(i,j,k)=ux(i,j,k)*(ub_constant/qm) !multiplicative correction
+                    !if (istret.eq.0) wcoeff = one
+                    !if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
+                    ux(i,j,k)=ux(i,j,k)+(ub_constant-qm) !additive correction
+                    !ux(i,j,k)=ux(i,j,k)*(ub_constant/qm) !multiplicative correction
                 else
                     !Cancel solid zone (ep=1)
                     ux(i,j,k)=zero
@@ -1623,7 +1622,7 @@ contains
 
     !Check new bulk velocity
     if (mod(itime, ilist)==0) then
-        call rough_volume_avg(ux,qm,ep,ncount)
+        call rough_volume_avg(ux,qm,ep)
         if (nrank==0) print *,'    Bulk velocity  after',qm
     endif
     !
@@ -1632,7 +1631,7 @@ contains
   end subroutine rough_bulk_u
   !********************************************************************
   !
-  subroutine rough_bulk_phi(phi,ux,ep,is,phib_constant,ncount)
+  subroutine rough_bulk_phi(phi,ux,ep,is,phib_constant)
   !
   !********************************************************************
 
@@ -1647,7 +1646,7 @@ contains
     real(mytype),intent(inout),dimension(xsize(1),xsize(2),xsize(3))  :: phi,ux
     real(mytype),intent(in   ),dimension(xsize(1),xsize(2),xsize(3))  :: ep
     real(mytype),intent(in   )                                        :: phib_constant !bulk temperature value
-    real(mytype),intent(in   )                                        :: ncount !numer of cells inside the pipe
+    !real(mytype),intent(in   )                                        :: ncount !numer of cells inside the pipe
     !LOCALS
     real(mytype)                                                      :: qv,qm !volumetric averaged values
     real(mytype)                                                      :: ym,zm,yc,zc
@@ -1678,8 +1677,8 @@ contains
 
     !--------------------------- Bulk Temperature ---------------------------
     !                  with corrected streamwise velocity
-    call rough_volume_avg(ux*phi,qm,ep,ncount)
-    call rough_volume_avg(ux*ux ,qv,ep,ncount)
+    call rough_volume_avg(ux*phi,qm,ep)
+    call rough_volume_avg(ux*ux ,qv,ep)
     if (nrank.eq.0) then
         if (mod(itime, ilist)==0) write(*,256) is
         if (mod(itime, ilist)==0) print *,'         Bulk phi before',qm
@@ -1710,46 +1709,49 @@ contains
   end subroutine rough_bulk_phi
   !********************************************************************
   !
-  subroutine rough_volume_avg(var,qm,ep,ncount)
+  subroutine rough_volume_avg(var,qm,ep)
   !
   !********************************************************************
 
     use param
     use variables
     use MPI
-    !use ibm_param, only: rai
 
     implicit none
 
     !INPUTS
     real(mytype),dimension(xsize(1),xsize(2),xsize(3))  :: var,ep
     real(mytype),intent(out)                            :: qm
-    real(mytype),intent(in)                             :: ncount
+    !real(mytype),intent(in)                             :: ncount
     !LOCALS
     real(mytype)                                        :: ym,yc,zm,zc
     integer                                             :: i,j,k,code
     real(mytype)                                        :: wcoeff, wsum
 
-    !Compute volumetric average of var
-    !in the inner fluid zone ep=0
+    !Compute volumetric average of var in the inner fluid zone ep=0
     qm=zero
     wsum = zero
+    wcoeff = dy / (yly * real(xsize(1) * zsize(3), kind=mytype))
     do k=1,xsize(3)
-        do j=1,xsize(2)
+        do jloc=1,xsize(2)
+           j = jloc + xstart(2) - 1
             do i=1,xsize(1)
                 if (ep(i,j,k).eq.0) then
-                  if (istret.eq.0) wcoeff = one
-                  if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
-                    wsum = wsum + wcoeff
-                    qm= qm + wcoeff*var(i,j,k)
+                  !if (istret.eq.0) qm = qm + var(i,j,k)
+                  !if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
+                  !wsum = wsum + wcoeff
+                    qm= qm + var(i,jloc,k) / ppy(j)
                 endif
             enddo
         enddo
     enddo
+
+    qm = qm*wcoeff
+    
     call MPI_ALLREDUCE(MPI_IN_PLACE,qm,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    call MPI_ALLREDUCE(MPI_IN_PLACE,wsum,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
-    if (istret.eq.0) qm = qm/ncount
-    if (istret.ne.0) qm = qm/wsum
+    !call MPI_ALLREDUCE(MPI_IN_PLACE,wsum,1,real_type,MPI_SUM,MPI_COMM_WORLD,code)
+    !if (istret.eq.0) qm = qm/ncount
+    !if (istret.ne.0) qm = qm/wsum
     !
     return
 
