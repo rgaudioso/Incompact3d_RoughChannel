@@ -119,12 +119,17 @@ contains
     uxmin1=-umaxout(4)
     uymin1=-umaxout(5)
     uzmin1=-umaxout(6)
-
+    
+    if (local_io_unit.eq.-1 .and. nrank.eq.0) then
+       open(newunit=local_io_unit,file='Uc.dat',status='unknown')
+    endif
+    
     if (nrank == 0) then
 
        write(*,*) 'U,V,W min=',real(uxmin1,4),real(uymin1,4),real(uzmin1,4)
        write(*,*) 'U,V,W max=',real(uxmax1,4),real(uymax1,4),real(uzmax1,4)
-       !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)
+       !print *,'CFL=',real(abs(max(uxmax1,uymax1,uzmax1)*dt)/min(dx,dy,dz),4)       
+       write(local_io_unit,*) real((itime-1)*dt,mytype), real(uxmax1,4) !write centerline vel.
 
        if((abs(uxmax1)>=onehundred).or.(abs(uymax1)>=onehundred).OR.(abs(uzmax1)>=onehundred)) then
          write(*,*) 'Velocity diverged! SIMULATION IS STOPPED!'
