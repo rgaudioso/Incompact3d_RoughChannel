@@ -55,7 +55,7 @@ contains
     !+++++++++++++++++++++++++++++++++ INSERIRE QUI MBC INIT PHI++++++++++++++++++++++++++++++++++++++++++++++
     if (iscalar.ne.0) then
        !Analytical laminar temperature profile, with nu=4.36
-       nu=real(48./11.,8)
+       nu=real(140./34.,8)
        if (nrank==0.and.(mod(itime, ilist) == 0 .or. itime == ifirst .or. itime == ilast)) then
           write(*,*) 'Imposing analytical laminar  temperature profile'
        endif
@@ -68,8 +68,8 @@ contains
              !if (istret/=0) ym=yp(j+xstart(2)-1)-(yly-offset)*half
                do i=1,xsize(1)
                   if (ep1(i,j,k).eq.0) then
-                     !phi1(i,j,k,is) = two*nu*(three/sixteen + ym**four - ym**two)  
-		     phi1(i,j,k,is) = one
+                     phi1(i,j,k,is) = (nu/sixteen)*(five + ym**four - six*(ym**two))  
+		     !phi1(i,j,k,is) = one
                   else
                      phi1(i,j,k,is) = zero
                   endif
