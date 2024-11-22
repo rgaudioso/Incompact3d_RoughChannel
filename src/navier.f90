@@ -1737,7 +1737,7 @@ contains
         do jloc=1,xsize(2)
            j = jloc + xstart(2) - 1
             do i=1,xsize(1)
-                if (ep(i,j,k).eq.0) then
+                if (ep(i,jloc,k).eq.0) then
                   !if (istret.eq.0) qm = qm + var(i,j,k)
                   !if (istret.ne.0) wcoeff = dyp(j+xstart(2)-1)/dy !Correct for stretching by weighted avg
                   !wsum = wsum + wcoeff
